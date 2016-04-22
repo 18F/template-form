@@ -23,18 +23,18 @@ module.exports = function(grunt) {
       build: ['Gruntfile.js', 'src/**/*.js']
     },
     browserify: {
-      'compile/bundle.js': ['src/form.js']
+      'dist/js/bundle.js': ['src/form.js']
     },
-    uglify: {
-      options: {
-        banner: '/*\n <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> \n*/\n'
-      },
-      build: {
-        files: {
-          'dist/js/script.min.js': 'compile/bundle.js'
-        }
-      }
-    },
+    // uglify: {
+    //   options: {
+    //     banner: '/*\n <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> \n*/\n'
+    //   },
+    //   build: {
+    //     files: {
+    //       'dist/js/script.min.js': 'compile/bundle.js'
+    //     }
+    //   }
+    // },
     copy: {
       build: {
         files: [
@@ -50,10 +50,10 @@ module.exports = function(grunt) {
     watch: {
       scripts: {
         files: 'src/**/*.js',
-        tasks: ['jshint', 'browserify', 'uglify']
+        tasks: ['jshint', 'browserify']
       },
       indexFile: {
-        files: 'src/index.html',
+        files: 'src/*.html',
         tasks: ['copy']
       }
 
@@ -68,7 +68,7 @@ module.exports = function(grunt) {
   // we can only load these if they are in our package.json
   // make sure you have run npm install so our app can find these
   grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
+  // grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-fixmyjs');
   grunt.loadNpmTasks('grunt-browserify');
@@ -78,6 +78,6 @@ module.exports = function(grunt) {
   // ========= // CREATE TASKS =========
 
 // this default task will go through all configuration (dev and production) in each task
-grunt.registerTask('default', ['jshint', 'browserify','uglify', 'copy']);
+grunt.registerTask('default', ['jshint', 'browserify', 'copy']);
 
 };
