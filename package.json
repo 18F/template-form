@@ -1,0 +1,38 @@
+{
+  "name": "template-form",
+  "version": "1.0.0",
+  "description": "A front-end form generator from Markdown and Handlebars Templates",
+  "main": "expression_parser.js",
+  "dependencies": {
+    "bootstrap": "^3.3.6",
+    "browserify": "^13.0.0",
+    "handlebars": "^4.0.5",
+    "jquery": "^2.2.3",
+    "showdown": "^1.3.0"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-browserify": "^5.0.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-cssmin": "^1.0.0",
+    "grunt-contrib-jade": "^1.0.0",
+    "grunt-contrib-jshint": "^1.0.0",
+    "grunt-contrib-uglify": "^1.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-fixmyjs": "^0.3.0",
+    "jshint-stylish": "^2.1.0"
+  },
+  "scripts": {
+    "test": "node expression_parser.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/18f/template-form.git"
+  },
+  "author": "lauraGgit",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "bugs": {
+    "url": "https://github.com/18f/template-form/issues"
+  },
+  "homepage": "https://github.com/18f/template-form#readme"
+}
