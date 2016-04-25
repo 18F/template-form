@@ -19,6 +19,9 @@ $(document).ready(function(){
     .then(function(templData){
       var rawMarkdown = decodeContent(tempRes);
       var templateFields = JSON.parse(decodeContent(templData));
+
+      var uri = "data:text/plain;charset=utf-8," + encodeURIComponent(rawMarkdown);
+      $('a.download').attr("href", uri);
       renderMarkdown($('#rendered_template'), rawMarkdown);
       // var templateList = [{"name": "Purchase Order", "value": "purchase_order", "text": "templateString"}, {"name": "Test 2", "value": "test_2", "text": "templateString2"}];
       buildForm($('#template_form'),templateFields);
