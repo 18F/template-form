@@ -79,19 +79,51 @@ $(document).ready(function(){
           $fieldSet = $('<fieldSet />').addClass('form-group');
           _.each(val, function(subVal, subKey){
             var DataKey = key+"."+subKey;
-            console.log(DataKey);
-            $fieldSet.append($('<label />').attr('for', DataKey).text(DataKey));
-            $fieldSet.append($('<input />').addClass('form-control').attr({'name': DataKey, 'value': ""}));
+            $fieldSet.append($('<label />').attr('for', DataKey).text(labelMaker(key, subKey)))
+            .append($('<input />').addClass('form-control').attr({'name': DataKey, 'value': ""}));
           });
           $formDiv.append($fieldSet);
         }
       }
 
       else {
-        $formDiv.append($('<input />').addClass('form-control').attr({'name': key, 'value': val}));
+        $formDiv.append($('<label />').attr('for', 'key').text(addWord("", key)))
+        .append($('<input />').addClass('form-control').attr({'name': key, 'value': val}));
       }
     });
   }
+
+  function labelMaker(key, subKey){
+    var label = "";
+    label = addWord(label, key);
+    label += " ";
+    label = addWord(label, subKey);
+    return label;
+  }
+
+  function ifUpper(char){
+    if (char == char.toUpperCase()) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  function addWord(label, key){
+    label += key[0].toUpperCase();
+    for(var i=1; i < key.length; i++){
+      if(ifUpper(key[i])){
+        label += " "+key[i];
+      } else {
+        label += key[i];
+      }
+    }
+    return label;
+  }
+
+  function capCase(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
 //   var templateList = [{"name": "Purchase Order", "value": "purchase_order", "text": templateString}, {"name": "Test 2", "value": "test_2", "text": templateString2}];
 //
 //   for(var i = 0; i < templateList.length; i++){
