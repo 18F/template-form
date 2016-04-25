@@ -31,17 +31,14 @@ $(document).ready(function(){
           if (field.length == 1){
               if (typeof templateFields[$(this).attr('name')] === 'object'){
                 templateData[$(this).attr('name')][$(this).attr('data-itr')] = $(this).val();
-                console.log($(this).val());
 
               } else {
                   // Add list Handling
                 templateFields[field[0]] = $(this).val();
-                console.log($(this).val());
               }
 
           } else {
             templateFields[field[0]][field[1]] = $(this).val();
-            console.log($(this).val());
           }
 
           var template = Handlebars.compile(rawMarkdown);
@@ -51,7 +48,6 @@ $(document).ready(function(){
           $('a.download').attr("href", uri);
           renderMarkdown($('#rendered_template'), handledBar);
 
-          console.log(templateFields);
 
     });
   });
