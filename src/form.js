@@ -5,51 +5,99 @@ require('es6-promise').polyfill();
 var superagentPromisePlugin = require('superagent-promise-plugin');
 var request = superagentPromisePlugin.patch(require('superagent'));
 var base64 = require('js-base64').Base64;
+var expParse = require('./expression_parser.js');
+var _ =require('underscore');
 
 /*jshint multistr: true */
-var markdown = new showdown.Converter();
+var markdown = new showdown.Converter({'tables': true});
+var templateRepo = 'acq-templates';
+
 $(document).ready(function(){
-  request.get('https://api.github.com/repos/18F/acq-templates/contents/sow/agile_bpa.md')
-  .use(superagentPromisePlugin)
-  .then(function (res) {
-    // success
-    var obj = JSON.parse(res.text);
-    var rawMarkdown = base64.decode(obj.content);
-    var markDownLines = rawMarkdown.split(/\r\n|\r|\n/);
-    console.log(markDownLines.length);
-    var intro = markDownLines[0];
-    console.log(intro);
-    console.log(typeof intro);
-    $('#rendered_template').html(intro);
-    var htmledDown = markdown.makeHtml(rawMarkdown);
-    $('#rendered_template').html(htmledDown);
-  })
-  .catch(function (err) {
-    // error
-    var res = err.response; // the full response object
+  getGitResourcePromise(templateRepo, 'sow/agile_bpa.md')
+  .then(function (tempRes) {
+    getGitResourcePromise(templateRepo, 'sow/sow_data_sample.json')
+    .then(function(templData){
+      var rawMarkdown = decodeContent(tempRes);
+      var templateFields = JSON.parse(decodeContent(templData));
+      renderMarkdown($('#rendered_template'), rawMarkdown);
+      // var templateList = [{"name": "Purchase Order", "value": "purchase_order", "text": "templateString"}, {"name": "Test 2", "value": "test_2", "text": "templateString2"}];
+      buildForm($('#template_form'),templateFields);
+      $('#template_form input').change(function(e){
+
+          field = $(this).attr('name').split('.'); /// How to split to get to the object
+          if (field.length == 1){
+              if (typeof templateFields[$(this).attr('name')] === 'object'){
+                templateData[$(this).attr('name')][$(this).attr('data-itr')] = $(this).val();
+                console.log($(this).val());
+
+              } else {
+                  // Add list Handling
+                templateFields[field[0]] = $(this).val();
+                console.log($(this).val());
+              }
+
+          } else {
+            templateFields[field[0]][field[1]] = $(this).val();
+            console.log($(this).val());
+          }
+
+          var template = Handlebars.compile(rawMarkdown);
+          var handledBar = template(templateFields);
+          renderMarkdown($('#rendered_template'), handledBar);
+
+          console.log(templateFields);
+
+    });
   });
-//   var templateString = '# RFQ for the {{agency.fullName}}\
-//   \
-//   ### {{date}}\
-//   \
-//   ### Table of Contents\
-//   \
-//   {{#each sections}}\
-//   \
-//   * {{this}}\
-//   \
-//   {{/each}}\
-//   \
-//   Note: All sections of this RFQ will be incorporated into the contract except the Statement of Objectives, Instructions, and Evaluation Factors.\n +\n +******\n +\n +## 1. Definitions\n +{{#each definitions}}\n +\n +{{this}}\n +\n +{{/each}}\n +\n +# 2. Services\n +## Brief Description of Services & Type of Contract\n +\n +{{services.descriptionOfServices}}\n +\n +{{services.naicsText}}\n +\n +## Budget\n +The government is willing to invest a maximum budget of {{services.maxBudget}} in this endeavor.\n +\n +{{#if services.travel.requirement}}\n +\n +The Government anticipates travel will be required under this effort. Contractor travel expenses will not exceed {{services.travel.budget}}.\n +\n +{{services.travel.language}} {{/if}}';
-//   var templateString2 = '# Second Template {{agency.fullName}}\n +### {{date}}</h3>\n +\n +### Table of Contents\n +{{#each sections}}\n +* {{this}}\n +{{/each}}\n +\n +Note: All sections of this RFQ will be incorporated into the contract except the Statement of Objectives, Instructions, and Evaluation Factors.\n +\n +******\n +\n +## 1. Definitions\n +{{#each definitions}}\n +\n +{{this}}\n +\n +{{/each}}\n +\n +# 2. Services\n +## Brief Description of Services & Type of Contract\n +\n +{{services.descriptionOfServices}}\n +\n +{{services.naicsText}}\n +\n +## Budget\n +The government is willing to invest a maximum budget of {{services.maxBudget}} in this endeavor.\n +\n +{{#if services.travel.requirement}}\n +\n +The Government anticipates travel will be required under this effort. Contractor travel expenses will not exceed {{services.travel.budget}}.\n +\n +{{services.travel.language}} {{/if}}';
+
+}).catch(function(e){console.log(e);});
+
+
+  function getGitResourcePromise(repo, path){
+    var url = 'https://api.github.com/repos/18F/'+repo+'/contents/'+path;
+    var req = request.get(url)
+    .use(superagentPromisePlugin);
+    return req;
+  }
+
+  function decodeContent(gitResource){
+    var obj = JSON.parse(gitResource.text);
+    var txt = base64.decode(obj.content);
+    return txt;
+  }
+
+  function renderMarkdown($div, content){
+    $div.html(markdown.makeHtml(content));
+  }
+
+  function buildForm($formDiv, fieldsObj){
+    _.each(fieldsObj, function(val, key){
+      if(typeof val == "object"){
+        if(_.isArray(val)){
+
+        } else {
+          $fieldSet = $('<fieldSet />').addClass('form-group');
+          _.each(val, function(subVal, subKey){
+            var DataKey = key+"."+subKey;
+            console.log(DataKey);
+            $fieldSet.append($('<label />').attr('for', DataKey).text(DataKey));
+            $fieldSet.append($('<input />').addClass('form-control').attr({'name': DataKey, 'value': ""}));
+          });
+          $formDiv.append($fieldSet);
+        }
+      }
+
+      else {
+        $formDiv.append($('<input />').addClass('form-control').attr({'name': key, 'value': val}));
+      }
+    });
+  }
 //   var templateList = [{"name": "Purchase Order", "value": "purchase_order", "text": templateString}, {"name": "Test 2", "value": "test_2", "text": templateString2}];
 //
 //   for(var i = 0; i < templateList.length; i++){
 //     $("#select_template select").append($('<option />').attr({'name': templateList[i].name, 'value': templateList[i].value}).text(templateList[i].name));
 //   }
 //
-//   var data = {"agency": {fullName: "Hey Gurl"}, "date": "04/17/2016", "sections": [], "definitions": ["def 1", "def 2"], "services": {"descriptionOfServices": "Descript of serv", "naicsText": "Naics Text", "maxBudget": "10000"}};
-//   var templ = templateList[0].text;
 //   $("#select_template select").change(function(e){
 //     e.preventDefault();
 //     console.log($(this).val());
@@ -65,29 +113,6 @@ $(document).ready(function(){
 //     $('#rendered_template').html(markdown.makeHtml(templ));
 //   });
 //
-//   $('#template_form input').change(function(e){
-//     field = $(this).attr('name').split('.'); /// How to split to get to the object
-//     if (field.length == 1){
-//         if (typeof data[$(this).attr('name')] === 'object'){
-//           data[$(this).attr('name')][$(this).attr('data-itr')] = $(this).val();
-//
-//         } else {
-//             // Add list Handling
-//           data[field[0]] = $(this).val();
-//         }
-//
-//
-//     } else {
-//       data[field[0]][field[1]] = $(this).val();
-//     }
-//
-//
-//     // var template = Handlebars.compile(templ);
-//     // var fullMarkdown = template(data);
-//     // // $('#rendered_template').markdown(fullMarkdown);
-//     // $('#rendered_template').html(fullMarkdown);
-//     updateTemplate(templ);
-//   });
 //
 //   $('.remove-list-item').click(function(e){
 //     e.preventDefault();
@@ -95,10 +120,4 @@ $(document).ready(function(){
 //     updateTemplate(templ);
 //   });
 //
-// function updateTemplate(selected_template){
-//   var template = Handlebars.compile(selected_template);
-//   var fullMarkdown = template(data);
-//   // $('#rendered_template').markdown(fullMarkdown);
-//   $('#rendered_template').html(fullMarkdown);
-// }
 });

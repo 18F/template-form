@@ -13,18 +13,10 @@
         <div class="row">
             <div class="col-md-6">
               <div id="select_template"><select></select></div>
-                <div id="template_form"><form>
-                  <label for="agency.fullName">Agency Full Name</label><br />
-                  <input value="" name="agency.fullName"></text><br />
-                  <label for="date">Date</label><br />
-                  <input value="" name="date"></text><br />
-                  <label for="sections">Section</label><br />
-                  <ul>
-                  <li><input value="" name="sections" data-itr=1></text> <a href="#" class="remove-list-item" data-field="sections" data-itr=1>-</a><br /></li>
-                  <li><input value="" name="sections" data-itr=2></text> <a href="#" class="remove-list-item" data-field="sections" data-itr=2>-</a><br /></li>
-                  <li><a href="#" class="add-list-item" data-field="sections">+</a></li>
-                </ul>
-                </form></div>
+                <div id="template_form_container">
+                  <form id="template_form">
+                </form>
+              </div>
             </div>
             <div class="col-md-6">
                 <div id="rendered_template">Select a Template</div>
