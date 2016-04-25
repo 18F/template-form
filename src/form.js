@@ -43,6 +43,9 @@ $(document).ready(function(){
 
           var template = Handlebars.compile(rawMarkdown);
           var handledBar = template(templateFields);
+          //Add download of the md
+          var uri = "data:text/plain;charset=utf-8," + encodeURIComponent(handledBar);
+          $('a.download').attr("href", uri);
           renderMarkdown($('#rendered_template'), handledBar);
 
           console.log(templateFields);
@@ -94,11 +97,8 @@ $(document).ready(function(){
   }
 
   function labelMaker(key, subKey){
-    var label = "";
-    label = addWord(label, key);
-    label += " ";
-    label = addWord(label, subKey);
-    return label;
+    var label = addWord("", key)+" ";
+    return addWord(label, subKey);
   }
 
   function ifUpper(char){
