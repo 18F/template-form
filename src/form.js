@@ -22,7 +22,7 @@ $(document).ready(function(){
       renderMarkdown($('#rendered_template'), rawMarkdown);
       // var templateList = [{"name": "Purchase Order", "value": "purchase_order", "text": "templateString"}, {"name": "Test 2", "value": "test_2", "text": "templateString2"}];
       buildForm($('#template_form'),templateFields);
-      $('#template_form input').change(function(e){
+      $('#template_form input').keyup(function(e){
 
           field = $(this).attr('name').split('.'); /// How to split to get to the object
           if (field.length == 1){
