@@ -24,13 +24,13 @@ $(document).ready(function(){
 
     var templateJson;
     if(directories.length > 1){
-      $('#select_template').append($('<label />').text("Please select type of template you would like to use."))
+      $('#select_template form').append($('<label />').text("Please select type of template you would like to use."))
       .append($('<select />').addClass('form-control').attr({'name': 'template_directory', 'id': 'template_directory'}).append($('<option />').text('Select a Type of Template').attr({'selected':'selected', 'disabled':'disabled'})));
 
 
 
       _.each(directories, function(d){
-        $('#select_template #template_directory').append($('<option />').attr({'name': 'template_directory', 'value': d}).text(capCase(d)));
+        $('#select_template form #template_directory').append($('<option />').attr({'name': 'template_directory', 'value': d}).text(capCase(d)));
       });
     } else {
       templateJson = getDirectoryJSON(directories[0], tree.body.tree);
@@ -38,14 +38,14 @@ $(document).ready(function(){
     }
 
 
-    $('#select_template #template_directory').keyup(function(e){
+    $('#select_template form #template_directory').keyup(function(e){
       var dir = $(this).val();
       templateJson = getDirectoryJSON(dir, tree.body.tree);
       makeSubFileSelect(dir, subFiles);
 
     });
 
-    $('#select_template #template_file').change(function(e){
+    $('#select_template form #template_file').change(function(e){
       e.preventDefault();
       var filePath = $(this).val();
       templateBuilder(templateRepo, filePath, templateJson.path);
@@ -179,7 +179,7 @@ function templateBuilder(templateRepo, templatePath, sampleDataPath){
 }
 
   function makeSubFileSelect(dir, subFiles){
-    $('#select_template').append($('<label />').text("Choose the template you would like to use: "))
+    $('#select_template form').append($('<label />').text("Choose the template you would like to use: "))
     .append($('<select />').addClass('form-control').attr({'name': 'template_file', 'id': 'template_file'}).append($('<option />').text('Select a Template').attr({'selected':'selected', 'disabled':'disabled'})));
     _.each(subFiles, function(s){ // Need to filter subfiles based on mother path
       var p = s.path.split('/');
