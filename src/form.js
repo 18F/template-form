@@ -24,8 +24,8 @@ $(document).ready(function(){
 
     var templateJson;
     if(directories.length > 1){
-      $('#select_template').append($('<label />').text("Please select the template folder you would like to use."))
-      .append($('<select />').attr({'name': 'template_directory', 'id': 'template_directory'}));
+      $('#select_template').append($('<label />').text("Please select type of template you would like to use."))
+      .append($('<select />').addClass('form-control').attr({'name': 'template_directory', 'id': 'template_directory'}).append($('<option />').text('Select a Type of Template').attr({'selected':'selected', 'disabled':'disabled'})));
 
 
 
@@ -180,7 +180,7 @@ function templateBuilder(templateRepo, templatePath, sampleDataPath){
 
   function makeSubFileSelect(dir, subFiles){
     $('#select_template').append($('<label />').text("Choose the template you would like to use: "))
-    .append($('<select />').attr({'name': 'template_file', 'id': 'template_file'}));
+    .append($('<select />').addClass('form-control').attr({'name': 'template_file', 'id': 'template_file'}).append($('<option />').text('Select a Template').attr({'selected':'selected', 'disabled':'disabled'})));
     _.each(subFiles, function(s){ // Need to filter subfiles based on mother path
       var p = s.path.split('/');
       if(p[0] == dir){
