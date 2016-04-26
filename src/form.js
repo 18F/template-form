@@ -11,11 +11,53 @@ var _ =require('underscore');
 /*jshint multistr: true */
 var markdown = new showdown.Converter({'tables': true});
 var templateRepo = 'acq-templates';
+var branch = 'develop';
+var lastDataFile = "";
 
 $(document).ready(function(){
-  getGitResourcePromise(templateRepo, 'sow/agile_bpa.md')
+  getGitTree(templateRepo, branch).then(function(tree){
+    var directories = _.pluck(_.where(tree.body.tree, {type: "tree"}), 'path');
+    var subFiles = _.filter(tree.body.tree, function(file){
+      var fileExt = file.path.split('.');
+      return file.path.split('/').length > 1 && fileExt.pop() == 'md';
+    });
+
+    var templateJson;
+    if(directories.length > 1){
+      $('#select_template').append($('<label />').text("Please select the template folder you would like to use."))
+      .append($('<select />').attr({'name': 'template_directory', 'id': 'template_directory'}));
+
+
+
+      _.each(directories, function(d){
+        $('#select_template #template_directory').append($('<option />').attr({'name': 'template_directory', 'value': d}).text(capCase(d)));
+      });
+    } else {
+      templateJson = getDirectoryJSON(directories[0], tree.body.tree);
+      makeSubFileSelect(directories[0], subFiles);
+    }
+
+
+    $('#select_template #template_directory').keyup(function(e){
+      var dir = $(this).val();
+      templateJson = getDirectoryJSON(dir, tree.body.tree);
+      makeSubFileSelect(dir, subFiles);
+
+    });
+
+    $('#select_template #template_file').change(function(e){
+      e.preventDefault();
+      var filePath = $(this).val();
+      templateBuilder(templateRepo, filePath, templateJson.path);
+    });
+
+
+}).catch(function(e){console.log(e);});
+
+function templateBuilder(templateRepo, templatePath, sampleDataPath){
+  getGitResourcePromise(templateRepo, templatePath)
   .then(function (tempRes) {
-    getGitResourcePromise(templateRepo, 'sow/sow_data_sample.json')
+    getGitResourcePromise(templateRepo, sampleDataPath)
     .then(function(templData){
       var rawMarkdown = decodeContent(tempRes);
       var templateFields = JSON.parse(decodeContent(templData));
@@ -23,8 +65,12 @@ $(document).ready(function(){
       var uri = "data:text/plain;charset=utf-8," + encodeURIComponent(rawMarkdown);
       $('a.download').attr("href", uri);
       renderMarkdown($('#rendered_template'), rawMarkdown);
-      // var templateList = [{"name": "Purchase Order", "value": "purchase_order", "text": "templateString"}, {"name": "Test 2", "value": "test_2", "text": "templateString2"}];
-      buildForm($('#template_form'),templateFields);
+
+      //Only build new form if new template
+      if(lastDataFile !== sampleDataPath){
+        buildForm($('#template_form'),templateFields);
+      }
+      lastDataFile = sampleDataPath;
       $('#template_form input').keyup(function(e){
 
           field = $(this).attr('name').split('.'); /// How to split to get to the object
@@ -52,11 +98,19 @@ $(document).ready(function(){
     });
   });
 
-}).catch(function(e){console.log(e);});
+});
+}
 
 
   function getGitResourcePromise(repo, path){
     var url = 'https://api.github.com/repos/18F/'+repo+'/contents/'+path;
+    var req = request.get(url)
+    .use(superagentPromisePlugin);
+    return req;
+  }
+
+  function getGitTree(repo, branch){
+    var url = 'https://api.github.com/repos/18F/'+repo+'/git/trees/'+branch+'?recursive=1'; //Not doing recursive because only want to keep it one level deep
     var req = request.get(url)
     .use(superagentPromisePlugin);
     return req;
@@ -123,26 +177,29 @@ $(document).ready(function(){
   function capCase(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
-//   var templateList = [{"name": "Purchase Order", "value": "purchase_order", "text": templateString}, {"name": "Test 2", "value": "test_2", "text": templateString2}];
-//
-//   for(var i = 0; i < templateList.length; i++){
-//     $("#select_template select").append($('<option />').attr({'name': templateList[i].name, 'value': templateList[i].value}).text(templateList[i].name));
-//   }
-//
-//   $("#select_template select").change(function(e){
-//     e.preventDefault();
-//     console.log($(this).val());
-//
-//     //Select Template
-//     for(var i = 0; i < templateList.length; i++){
-//       if (templateList[i].value == $(this).val()){
-//         templ = templateList[i].text;
-//       }
-//     }
-//     // $('#rendered_template').markdown(templ);
-//     // $('#rendered_template').html(templ);
-//     $('#rendered_template').html(markdown.makeHtml(templ));
-//   });
+
+  function makeSubFileSelect(dir, subFiles){
+    $('#select_template').append($('<label />').text("Choose the template you would like to use: "))
+    .append($('<select />').attr({'name': 'template_file', 'id': 'template_file'}));
+    _.each(subFiles, function(s){ // Need to filter subfiles based on mother path
+      var p = s.path.split('/');
+      if(p[0] == dir){
+        $('#select_template #template_file').append($('<option />').attr({'name': 'template_file', 'value': s.path}).text(capCase(p[1])));
+      }
+    });
+  }
+
+  function getDirectoryJSON(dir, tree){
+      var jsons = _.filter(tree, function(file){
+      var fileExt = file.path.split('.');
+      return file.path.split('/').length > 1 && fileExt.pop() == 'json';
+    });
+    if (jsons.length == 1){
+      return jsons[0];
+    } else {
+      return false;
+    }
+  }
 //
 //
 //   $('.remove-list-item').click(function(e){
