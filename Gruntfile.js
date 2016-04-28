@@ -29,7 +29,7 @@ module.exports = function(grunt) {
       options: {
         banner: '/*\n <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> \n*/\n'
       },
-      build: {
+      dist: {
         files: {
           'dist/js/script.min.js': 'compile/bundle.js'
         }
@@ -46,7 +46,7 @@ module.exports = function(grunt) {
                         'dist/index.html': ['src/index.html']
                     }
                 },
-                dev: {
+                dist: {
                   'options': {
                       'data': {
                         jsFile: 'script.min'
@@ -90,7 +90,7 @@ module.exports = function(grunt) {
   // we can only load these if they are in our package.json
   // make sure you have run npm install so our app can find these
   grunt.loadNpmTasks('grunt-contrib-jshint');
-  // grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-fixmyjs');
   grunt.loadNpmTasks('grunt-browserify');
@@ -102,5 +102,5 @@ module.exports = function(grunt) {
 
 // this default task will go through all configuration (dev and production) in each task
 grunt.registerTask('default', ['jshint', 'browserify', 'template', 'copy']);
-
+grunt.registerTask('dist', ['jshint', 'browserify', 'uglify', 'template:dist', 'copy']);
 };
