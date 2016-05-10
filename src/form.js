@@ -11,7 +11,7 @@ var _ =require('underscore');
 /*jshint multistr: true */
 var markdown = new showdown.Converter({'tables': true});
 var templateRepo = 'acq-templates';
-var branch = 'develop';
+var branch = 'purchase-order-handlebars';
 var lastDataFile = "";
 
 $(document).ready(function(){
@@ -22,10 +22,12 @@ $(document).ready(function(){
       return file.path.split('/').length > 1 && fileExt.pop() == 'md';
     });
 
-    var templateJson;
+
+    // var templateJson;
     if(directories.length > 1){
       $('#select_template form').append($('<label />').text("Please select type of template you would like to use."))
-      .append($('<select />').addClass('form-control').attr({'name': 'template_directory', 'id': 'template_directory'}).append($('<option />').text('Select a Type of Template').attr({'selected':'selected', 'disabled':'disabled'})));
+      .append($('<select />').addClass('form-control').attr({'name': 'template_directory', 'id': 'template_directory'}).append($('<option />')
+      .text('Select a Type of Template').attr({'selected':'selected', 'disabled':'disabled'})));
 
 
 
@@ -33,26 +35,30 @@ $(document).ready(function(){
         $('#select_template form #template_directory').append($('<option />').attr({'name': 'template_directory', 'value': d}).text(capCase(d)));
       });
     } else {
-      templateJson = getDirectoryJSON(directories[0], tree.body.tree);
-      makeSubFileSelect(directories[0], subFiles);
+      // templateJson = getDirectoryJSON(directories[0], tree.body.tree);
+      makeSubFileSelect(directories[0], subFiles, tree.body.tree);
     }
 
 
-    $('#select_template form #template_directory').keyup(function(e){
+    $('#select_template form #template_directory').change(function(e){
       var dir = $(this).val();
-      templateJson = getDirectoryJSON(dir, tree.body.tree);
-      makeSubFileSelect(dir, subFiles);
+      makeSubFileSelect(dir, subFiles, tree.body.tree);
 
     });
 
-    $('#select_template form #template_file').change(function(e){
-      e.preventDefault();
-      var filePath = $(this).val();
-      templateBuilder(templateRepo, filePath, templateJson.path);
-    });
+
 
 
 }).catch(function(e){console.log(e);});
+
+// separate function to be added when template dropdown is populated
+function templateClickListener(templateJson){
+  $('#select_template form select#template_file').change(function(e){
+    e.preventDefault();
+    var filePath = $(this).val();
+    templateBuilder(templateRepo, filePath, templateJson.path);
+  });
+}
 
 function templateBuilder(templateRepo, templatePath, sampleDataPath){
   getGitResourcePromise(templateRepo, templatePath)
@@ -178,9 +184,21 @@ function templateBuilder(templateRepo, templatePath, sampleDataPath){
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-  function makeSubFileSelect(dir, subFiles){
-    $('#select_template form').append($('<label />').text("Choose the template you would like to use: "))
-    .append($('<select />').addClass('form-control').attr({'name': 'template_file', 'id': 'template_file'}).append($('<option />').text('Select a Template').attr({'selected':'selected', 'disabled':'disabled'})));
+  function makeSubFileSelect(dir, subFiles, treeBody){
+    var templateJson = getDirectoryJSON(dir, treeBody);
+    if($('#select_template form #template_file').length){
+      $('#select_template form #template_file option').remove();
+      addDropDown(dir, subFiles);
+    } else {
+      $('#select_template form').append($('<label />').text("Choose the template you would like to use: "))
+      .append($('<select />').addClass('form-control').attr({'name': 'template_file', 'id': 'template_file'}));
+      addDropDown(dir, subFiles);
+    }
+    templateClickListener(templateJson);
+  }
+
+  function addDropDown(dir, subFiles){
+    $('#select_template #template_file').append($('<option />').text('Select a Template').attr({'selected':'selected', 'disabled':'disabled'}));
     _.each(subFiles, function(s){ // Need to filter subfiles based on mother path
       var p = s.path.split('/');
       if(p[0] == dir){
@@ -192,7 +210,8 @@ function templateBuilder(templateRepo, templatePath, sampleDataPath){
   function getDirectoryJSON(dir, tree){
       var jsons = _.filter(tree, function(file){
       var fileExt = file.path.split('.');
-      return file.path.split('/').length > 1 && fileExt.pop() == 'json';
+      var treeDir = file.path.split('/');
+      return treeDir.length > 1 && fileExt.pop() == 'json' & treeDir[0]==dir;
     });
     if (jsons.length == 1){
       return jsons[0];

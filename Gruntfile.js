@@ -76,7 +76,7 @@ module.exports = function(grunt) {
       },
       indexFile: {
         files: 'src/*.html',
-        tasks: ['copy']
+        tasks: ['template']
       }
 
     }
