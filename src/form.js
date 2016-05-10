@@ -97,7 +97,9 @@ function templateBuilder(templateRepo, templatePath, sampleDataPath){
           var handledBar = template(templateFields);
           //Add download of the md
           var uri = "data:text/plain;charset=utf-8," + encodeURIComponent(handledBar);
-          $('a.download').attr("href", uri);
+          var fileName = templatePath.split('/');
+          fileName = fileName[1];
+          $('a.download').removeClass('hide').attr({"href": uri, "download": fileName});
           renderMarkdown($('#rendered_template'), handledBar);
 
 
