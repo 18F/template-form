@@ -101,6 +101,6 @@ module.exports = function(grunt) {
   // ========= // CREATE TASKS =========
 
 // this default task will go through all configuration (dev and production) in each task
-grunt.registerTask('default', ['jshint', 'browserify', 'template', 'copy']);
+grunt.registerTask('default', ['jshint', 'browserify', 'template:build', 'copy']);
 grunt.registerTask('dist', ['jshint', 'browserify', 'uglify', 'template:dist', 'copy']);
 };
