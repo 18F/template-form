@@ -15,6 +15,10 @@ var branch = 'purchase-order-handlebars';
 var lastDataFile = "";
 
 $(document).ready(function(){
+  onReady();
+});
+
+function onReady() {
   getGitTree(templateRepo, branch).then(function(tree){
     var directories = _.pluck(_.where(tree.body.tree, {type: "tree"}), 'path');
     var subFiles = _.filter(tree.body.tree, function(file){
@@ -46,12 +50,12 @@ $(document).ready(function(){
 
     });
 
-
-
-
 }).catch(function(e){console.log(e);});
+}
+
 
 // separate function to be added when template dropdown is populated
+//DOM Functions
 function templateClickListener(templateJson){
   $('#select_template form select#template_file').change(function(e){
     e.preventDefault();
@@ -108,125 +112,130 @@ function templateBuilder(templateRepo, templatePath, sampleDataPath){
 
 });
 }
-
-
-  function getGitResourcePromise(repo, path){
-    var url = 'https://api.github.com/repos/18F/'+repo+'/contents/'+path;
-    var req = request.get(url)
-    .use(superagentPromisePlugin);
-    return req;
-  }
-
-  function getGitTree(repo, branch){
-    var url = 'https://api.github.com/repos/18F/'+repo+'/git/trees/'+branch+'?recursive=1'; //Not doing recursive because only want to keep it one level deep
-    var req = request.get(url)
-    .use(superagentPromisePlugin);
-    return req;
-  }
-
-  function decodeContent(gitResource){
-    var obj = JSON.parse(gitResource.text);
-    var txt = base64.decode(obj.content);
-    return txt;
-  }
-
-  function renderMarkdown($div, content){
-    $div.html(markdown.makeHtml(content));
-  }
-
-  function buildForm($formDiv, fieldsObj){
-    _.each(fieldsObj, function(val, key){
-      if(typeof val == "object"){
-        if(_.isArray(val)){
-
-        } else {
-          $fieldSet = $('<fieldSet />').addClass('form-group');
-          _.each(val, function(subVal, subKey){
-            var DataKey = key+"."+subKey;
-            $fieldSet.append($('<label />').attr('for', DataKey).text(labelMaker(key, subKey)))
-            .append($('<input />').addClass('form-control').attr({'name': DataKey, 'value': ""}));
-          });
-          $formDiv.append($fieldSet);
-        }
-      }
-
-      else {
-        $formDiv.append($('<label />').attr('for', 'key').text(addWord("", key)))
-        .append($('<input />').addClass('form-control').attr({'name': key, 'value': val}));
-      }
-    });
-  }
-
-  function labelMaker(key, subKey){
-    var label = addWord("", key)+" ";
-    return addWord(label, subKey);
-  }
-
-  function ifUpper(char){
-    if (char == char.toUpperCase()) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  function addWord(label, key){
-    label += key[0].toUpperCase();
-    for(var i=1; i < key.length; i++){
-      if(ifUpper(key[i])){
-        label += " "+key[i];
-      } else {
-        label += key[i];
-      }
-    }
-    return label;
-  }
-
-  function capCase(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
+function renderMarkdown($div, content){
+  $div.html(markdown.makeHtml(content));
 }
 
-  function makeSubFileSelect(dir, subFiles, treeBody){
-    var templateJson = getDirectoryJSON(dir, treeBody);
-    if($('#select_template form #template_file').length){
-      $('#select_template form #template_file option').remove();
-      addDropDown(dir, subFiles);
-    } else {
-      $('#select_template form').append($('<label />').text("Choose the template you would like to use: "))
-      .append($('<select />').addClass('form-control').attr({'name': 'template_file', 'id': 'template_file'}));
-      addDropDown(dir, subFiles);
-    }
-    templateClickListener(templateJson);
-  }
 
-  function addDropDown(dir, subFiles){
-    $('#select_template #template_file').append($('<option />').text('Select a Template').attr({'selected':'selected', 'disabled':'disabled'}));
-    _.each(subFiles, function(s){ // Need to filter subfiles based on mother path
-      var p = s.path.split('/');
-      if(p[0] == dir){
-        $('#select_template #template_file').append($('<option />').attr({'name': 'template_file', 'value': s.path}).text(capCase(p[1])));
+function buildForm($formDiv, fieldsObj){
+  _.each(fieldsObj, function(val, key){
+    if(typeof val == "object"){
+      if(_.isArray(val)){
+
+      } else {
+        $fieldSet = $('<fieldSet />').addClass('form-group');
+        _.each(val, function(subVal, subKey){
+          var DataKey = key+"."+subKey;
+          $fieldSet.append($('<label />').attr('for', DataKey).text(labelMaker(key, subKey)))
+          .append($('<input />').addClass('form-control').attr({'name': DataKey, 'value': ""}));
+        });
+        $formDiv.append($fieldSet);
       }
-    });
-  }
-
-  function getDirectoryJSON(dir, tree){
-      var jsons = _.filter(tree, function(file){
-      var fileExt = file.path.split('.');
-      var treeDir = file.path.split('/');
-      return treeDir.length > 1 && fileExt.pop() == 'json' & treeDir[0]==dir;
-    });
-    if (jsons.length == 1){
-      return jsons[0];
-    } else {
-      return false;
     }
+
+    else {
+      $formDiv.append($('<label />').attr('for', 'key').text(addWord("", key)))
+      .append($('<input />').addClass('form-control').attr({'name': key, 'value': val}));
+    }
+  });
+}
+
+function makeSubFileSelect(dir, subFiles, treeBody){
+  var templateJson = getDirectoryJSON(dir, treeBody);
+  if($('#select_template form #template_file').length){
+    $('#select_template form #template_file option').remove();
+    addDropDown(dir, subFiles);
+  } else {
+    $('#select_template form').append($('<label />').text("Choose the template you would like to use: "))
+    .append($('<select />').addClass('form-control').attr({'name': 'template_file', 'id': 'template_file'}));
+    addDropDown(dir, subFiles);
   }
-//
-//
+  templateClickListener(templateJson);
+}
+
+function addDropDown(dir, subFiles){
+  $('#select_template #template_file').append($('<option />').text('Select a Template').attr({'selected':'selected', 'disabled':'disabled'}));
+  _.each(subFiles, function(s){ // Need to filter subfiles based on mother path
+    var p = s.path.split('/');
+    if(p[0] == dir){
+      $('#select_template #template_file').append($('<option />').attr({'name': 'template_file', 'value': s.path}).text(capCase(p[1])));
+    }
+  });
+}
+
 //   $('.remove-list-item').click(function(e){
 //     e.preventDefault();
 //     data[$(this).attr('data-field')].slice([$(this).attr('data-itr')]);
 //     updateTemplate(templ);
 //   });
+
+//Non DOM functions
+
+function getGitResourcePromise(repo, path){
+  var url = 'https://api.github.com/repos/18F/'+repo+'/contents/'+path;
+  var req = request.get(url)
+  .use(superagentPromisePlugin);
+  return req;
+}
+
+function getGitTree(repo, branch){
+  var url = 'https://api.github.com/repos/18F/'+repo+'/git/trees/'+branch+'?recursive=1'; //Not doing recursive because only want to keep it one level deep
+  var req = request.get(url)
+  .use(superagentPromisePlugin);
+  return req;
+}
+
+function decodeContent(gitResource){
+  var obj = JSON.parse(gitResource.text);
+  var txt = base64.decode(obj.content);
+  return txt;
+}
+
+function labelMaker(key, subKey){
+  var label = addWord("", key)+" ";
+  return addWord(label, subKey);
+}
+
+function ifUpper(char){
+  if (char == char.toUpperCase()) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function addWord(label, key){
+  label += key[0].toUpperCase();
+  for(var i=1; i < key.length; i++){
+    if(ifUpper(key[i])){
+      label += " "+key[i];
+    } else {
+      label += key[i];
+    }
+  }
+  return label;
+}
+
+function capCase(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function getDirectoryJSON(dir, tree){
+    var jsons = _.filter(tree, function(file){
+    var fileExt = file.path.split('.');
+    var treeDir = file.path.split('/');
+    return treeDir.length > 1 && fileExt.pop() == 'json' & treeDir[0]==dir;
+  });
+  if (jsons.length == 1){
+    return jsons[0];
+  } else {
+    return false;
+  }
+}
+
+
+
 //
-});
+//
+
+//
