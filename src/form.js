@@ -232,10 +232,3 @@ function getDirectoryJSON(dir, tree){
     return false;
   }
 }
-
-
-
-//
-//
-
-//

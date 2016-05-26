@@ -17,6 +17,7 @@
     "underscore": "^1.8.3"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
     "grunt": "^0.4.5",
     "grunt-browserify": "^5.0.0",
     "grunt-contrib-copy": "^1.0.0",
@@ -26,7 +27,12 @@
     "grunt-contrib-uglify": "^1.0.0",
     "grunt-contrib-watch": "^1.0.0",
     "grunt-fixmyjs": "^0.3.0",
-    "jshint-stylish": "^2.1.0"
+    "istanbul": "^0.4.3",
+    "jshint-stylish": "^2.1.0",
+    "mocha": "^2.5.3",
+    "sinon": "^1.17.4",
+    "sinon-as-promised": "^4.0.0",
+    "underscore": "^1.8.3"
   },
   "scripts": {
     "test": "node expression_parser.js"
