@@ -1,7 +1,7 @@
 expect = require('chai').expect
 _un = require('underscore')
-app = require('../app')
 sinon = require('sinon')
+form = require('../src/form.js')
 require('sinon-as-promised')
 
 describe 'capCase', ->

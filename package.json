@@ -38,7 +38,7 @@
   },
   "scripts": {
     "test": "istanbul cover _mocha -- -R spec --compilers coffee:coffee-script/register && codecov",
-    "mocha-test": "mocha -- -R spec --compilers coffee:coffee-script/register"
+    "mochatest": "mocha  --compilers coffee:coffee-script/register test"
   },
   "repository": {
     "type": "git",
