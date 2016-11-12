@@ -1,9 +1,13 @@
 import React, { Component } from 'react';
 import './App.css';
 import * as request from 'superagent';
+import * as base64 from 'js-base64';
+import { Markdown } from 'react-showdown';
+import 'handlebars';
 
 const templateRepo = 'acq-templates';
 const remoteBranch = 'develop';
+// const markdown = new showdown.Converter({'tables': true});
 
 class SelectTemplate extends Component {
   constructor(props) {
@@ -13,7 +17,7 @@ class SelectTemplate extends Component {
                   availableTemplateDirectories: [],
                   availableTemplateFiles: [],
                   templateDirectorySelected: 'false',
-                  templateSelected: "",
+                  templateSelected: 'false',
                 };
     this.handleChange = this.handleChange.bind(this);
     this.handleChangeSub = this.handleChangeSub.bind(this);
@@ -75,8 +79,7 @@ class SelectTemplate extends Component {
 
   handleChangeSub(event){
     console.log(event.target.value);
-    this.setState({templateSelected: event.target.value});
-    console.log(this.state.templateSelected);
+    this.props.onUserChange(event.target.value);
   }
 
   renderFileSelect(){
@@ -124,10 +127,22 @@ class FormFiller extends Component {
 }
 
 class RenderedTemplate extends Component {
+  constructor(props) {
+    super(props);
+  }
   render() {
-    return (
-      <div id="rendered_template">Please Select a Template to View</div>
-    );
+
+    if(this.props.templateText === ''){
+      return (
+        <div id="rendered_template">Please Select a Template to View</div>
+      );
+    } else {
+      return (
+        // <div id="rendered_template">{markdown.makeHtml(this.props.templateText)}</div>
+        <div id="rendered_template"><Markdown markup={ this.props.templateText } /></div>
+      );
+    }
+
   }
 }
 
@@ -142,19 +157,40 @@ class DownloadButton extends Component {
 class App extends Component {
   constructor(props) {
     super(props);
-    this.state = {templateLoded: false};
+    this.state = {templateLoded: false,
+      templateText: ''};
+    this.handleSelectTemplate = this.handleSelectTemplate.bind(this);
   }
 
+  handleSelectTemplate(templateLoaded){
+    this.setState({templateLoaded: templateLoaded});
+    console.log(this.state.templateLoaded);
+    if(this.state.templateLoaded !== false){
+      this.getTemplateData();
+    }
+  }
+
+  getTemplateData(){
+    var self = this;
+    const url = 'https://api.github.com/repos/18F/'+templateRepo+'/contents/'+this.state.templateLoaded;
+    request
+    .get(url)
+    .set('Accept', 'application/json')
+    .end(function(err, res){
+      var rawMarkdown = decodeContent(res);
+      self.setState({templateText: rawMarkdown});
+    });
+  }
   render() {
     return (
       <div className="usa-grid">
           <div className="row">
               <div className="usa-width-one-half">
-              <SelectTemplate />
-              <FormFiller />
+              <SelectTemplate onUserChange={this.handleSelectTemplate} templateLoaded={this.state.templateLoaded}/>
+              <FormFiller templateLoaded={this.state.templateLoaded}/>
               </div>
               <div className="usa-width-one-half">
-                  <RenderedTemplate />
+                  <RenderedTemplate templateText={this.state.templateText}/>
                   <DownloadButton />
               </div>
           </div>
@@ -165,3 +201,10 @@ class App extends Component {
 }
 
 export default App;
+
+function decodeContent(gitResource){
+   var obj = JSON.parse(gitResource.text);
+   console.log(obj);
+   var txt = base64.Base64.decode(obj.content);
+   return txt;
+ }

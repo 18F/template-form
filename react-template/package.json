@@ -6,8 +6,12 @@
     "react-scripts": "0.7.0"
   },
   "dependencies": {
+    "handlebars": "^4.0.5",
+    "js-base64": "^2.1.9",
     "react": "^15.3.2",
     "react-dom": "^15.3.2",
+    "react-showdown": "^1.0.1",
+    "showdown": "^1.5.0",
     "superagent": "^2.3.0",
     "uswds": "^0.13.1"
   },
