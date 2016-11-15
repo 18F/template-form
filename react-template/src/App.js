@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import './App.css';
 import * as request from 'superagent';
-import * as base64 from 'js-base64';
 import { Markdown } from 'react-showdown';
 import 'handlebars';
+import * as helpers from './helpers';
 
 const templateRepo = 'acq-templates';
-const remoteBranch = 'develop';
+const remoteBranch = 'sow-yaml-schema';
 // const markdown = new showdown.Converter({'tables': true});
 
 class SelectTemplate extends Component {
@@ -15,9 +15,10 @@ class SelectTemplate extends Component {
     this.state = {repoForTemplates: templateRepo,
                   branchForTemplates: remoteBranch,
                   availableTemplateDirectories: [],
-                  availableTemplateFiles: [],
-                  templateDirectorySelected: 'false',
-                  templateSelected: 'false',
+                  availableTemplateFiles: {},
+                  availableSchemaFiles: {},
+                  templateDirectorySelected: false,
+                  templateSelected: false,
                 };
     this.handleChange = this.handleChange.bind(this);
     this.handleChangeSub = this.handleChangeSub.bind(this);
@@ -43,53 +44,35 @@ class SelectTemplate extends Component {
       if(res){
         const parsedData = JSON.parse(res.text);
         const directories = parsedData.tree.filter(gitPath => gitPath.type === 'tree');
-        const subFiles = parsedData.tree.filter((file) => {
-            return file.path.split('/').length > 1 && file.path.split('.').pop() === 'md';
-        });
-        let subFileHash = {};
-        subFiles.forEach(file => {
-          const pathArray = file.path.split('/');
-          file.filename = pathArray.pop();
-          if (pathArray[0] in subFileHash){
-            subFileHash[pathArray[0]].push(file);
-          } else {
-          subFileHash[pathArray[0]] = [file];
-          }
-        });
+        const templateFileHash = helpers.createFileHash(parsedData.tree, 'md');
+        const schemaFileHash = helpers.createFileHash(parsedData.tree, 'yml');
         self.setState({availableTemplateDirectories: directories,
-                      availableTemplateFiles: subFileHash});
+                      availableTemplateFiles: templateFileHash,
+                      availableSchemaFiles: schemaFileHash});
       }
     });
   }
 
   renderListItem(items){
     const selectors = [];
-    selectors.push(<option key='false' value='false'>Select a template type</option>);
+    selectors.push(<option key={false} value={false}>Select a template type</option>);
     items.forEach(item => {
-      selectors.push(<option key={item.path} value={item.path}>{item.path}</option>)
+      selectors.push(<option key={item.path} value={item.path}>{helpers.labelMaker(item.path)}</option>)
     })
     return selectors;
   }
 
   handleChange(event){
-    console.log(event.target.value)
     this.setState({templateDirectorySelected: event.target.value})
-    console.log(this.state.templateDirectorySelected);
   }
 
   handleChangeSub(event){
-    console.log(event.target.value);
-    this.props.onUserChange(event.target.value);
+    this.props.onUserChange({loaded: event.target.value, schemas: this.state.availableSchemaFiles[this.state.templateDirectorySelected]});
   }
 
   renderFileSelect(){
-    let directory = false;
-    if(this.state.templateDirectorySelected !== 'false'){
-      directory = this.state.templateDirectorySelected;
-    }
-
-    if(directory){
-      const selectedTemplates = this.state.availableTemplateFiles[directory];
+    if(this.state.templateDirectorySelected){
+      const selectedTemplates = this.state.availableTemplateFiles[this.state.templateDirectorySelected];
 
       return(
         <div>
@@ -116,13 +99,54 @@ class SelectTemplate extends Component {
 }
 
 class FormFiller extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {templateSchema: '',
+                  lastTemplate: false};
+  }
+
+  componentDidUpdate() {
+    this.getSchema();
+  }
+
+  getSchema(){
+    var self = this;
+    if(this.props.templateLoaded && this.props.templateLoaded !== this.state.lastTemplate){
+      console.log(this.props.availableSchemas);
+      const url = 'https://api.github.com/repos/18F/'+templateRepo+'/contents/'+ this.props.availableSchemas[0].path;
+      request
+      .get(url)
+      .query({ ref: remoteBranch })
+      .set('Accept', 'application/json')
+      .end(function(err, res){
+        if(err){
+          console.log(err.toString());
+        }
+        if(res){
+          var schemaData = helpers.decodeContent(res);
+          console.log(schemaData);
+          self.setState({templateSchema:schemaData});
+        }
+      });
+      self.setState({lastTemplate: this.props.templateLoaded})
+    }
+  }
+
   render() {
-    return (
-      <div id="template_form_container">
-          <form id="template_form">
-          </form>
-      </div>
-    );
+    if(this.props.templateLoaded){
+      return (
+        <div id="template_form_container">
+            <form id="template_form">
+            <textarea value={this.state.templateSchema}></textarea>
+            </form>
+        </div>
+      );
+    } else {
+      return (
+        <div id="template_form_container">
+        </div>
+      )
+    }
   }
 }
 
@@ -138,8 +162,7 @@ class RenderedTemplate extends Component {
       );
     } else {
       return (
-        // <div id="rendered_template">{markdown.makeHtml(this.props.templateText)}</div>
-        <div id="rendered_template"><Markdown markup={ this.props.templateText } /></div>
+        <div id="rendered_template"><Markdown markup={ this.props.templateText } tables={true} components={{ }} /></div>
       );
     }
 
@@ -158,14 +181,16 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {templateLoded: false,
-      templateText: ''};
+                  templateText: '',
+                  availableSchemas: []};
     this.handleSelectTemplate = this.handleSelectTemplate.bind(this);
   }
 
-  handleSelectTemplate(templateLoaded){
-    this.setState({templateLoaded: templateLoaded});
-    console.log(this.state.templateLoaded);
-    if(this.state.templateLoaded !== false){
+  handleSelectTemplate(templateSelected){
+    this.setState({templateLoaded: templateSelected.loaded,
+                   availableSchemas: templateSelected.schemas});
+    if(this.state.templateLoaded){
+      console.log(this.state.availableSchemas);
       this.getTemplateData();
     }
   }
@@ -176,35 +201,29 @@ class App extends Component {
     request
     .get(url)
     .set('Accept', 'application/json')
+    .query({ ref: remoteBranch })
     .end(function(err, res){
-      var rawMarkdown = decodeContent(res);
+      var rawMarkdown = helpers.decodeContent(res);
       self.setState({templateText: rawMarkdown});
     });
   }
+
   render() {
     return (
       <div className="usa-grid">
           <div className="row">
               <div className="usa-width-one-half">
               <SelectTemplate onUserChange={this.handleSelectTemplate} templateLoaded={this.state.templateLoaded}/>
-              <FormFiller templateLoaded={this.state.templateLoaded}/>
+              <FormFiller templateLoaded={this.state.templateLoaded} availableSchemas={this.state.availableSchemas}/>
               </div>
               <div className="usa-width-one-half">
                   <RenderedTemplate templateText={this.state.templateText}/>
                   <DownloadButton />
               </div>
           </div>
-
       </div>
     );
   }
 }
 
 export default App;
-
-function decodeContent(gitResource){
-   var obj = JSON.parse(gitResource.text);
-   console.log(obj);
-   var txt = base64.Base64.decode(obj.content);
-   return txt;
- }
