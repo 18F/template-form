@@ -2,8 +2,9 @@ import React, { Component } from 'react';
 import './App.css';
 import * as request from 'superagent';
 import { Markdown } from 'react-showdown';
-import 'handlebars';
+import * as Handlebars from 'handlebars';
 import * as helpers from './helpers';
+import * as YAML from 'yamljs';
 
 const templateRepo = 'acq-templates';
 const remoteBranch = 'sow-yaml-schema';
@@ -25,10 +26,6 @@ class SelectTemplate extends Component {
   }
   componentDidMount() {
     this.getGitFiles();
-  }
-
-  componentWillUnmount() {
-
   }
 
   getGitFiles(){
@@ -53,9 +50,9 @@ class SelectTemplate extends Component {
     });
   }
 
-  renderListItem(items){
+  renderListItem(items, initKey){
     const selectors = [];
-    selectors.push(<option key={false} value={false}>Select a template type</option>);
+    selectors.push(<option key={initKey} value={false}>Select a template type</option>);
     items.forEach(item => {
       selectors.push(<option key={item.path} value={item.path}>{helpers.labelMaker(item.path)}</option>)
     })
@@ -78,7 +75,7 @@ class SelectTemplate extends Component {
         <div>
         Please choose a template.
         <select value={this.state.templateDirectorySelected} onChange={this.handleChangeSub}>
-          {this.renderListItem(selectedTemplates)}
+          {this.renderListItem(selectedTemplates, 'directory')}
         </select>
         </div>
       )
@@ -90,7 +87,7 @@ class SelectTemplate extends Component {
       <div id="select_template">
       Please Select what type of template you would like to complete.
         <select onChange={this.handleChange}>
-          {this.renderListItem(this.state.availableTemplateDirectories)}
+          {this.renderListItem(this.state.availableTemplateDirectories, 'template')}
         </select>
         {this.renderFileSelect()}
       </div>
@@ -103,6 +100,8 @@ class FormFiller extends Component {
     super(props);
     this.state = {templateSchema: '',
                   lastTemplate: false};
+
+    this.handleChange = this.handleChange.bind(this);
   }
 
   componentDidUpdate() {
@@ -112,7 +111,6 @@ class FormFiller extends Component {
   getSchema(){
     var self = this;
     if(this.props.templateLoaded && this.props.templateLoaded !== this.state.lastTemplate){
-      console.log(this.props.availableSchemas);
       const url = 'https://api.github.com/repos/18F/'+templateRepo+'/contents/'+ this.props.availableSchemas[0].path;
       request
       .get(url)
@@ -124,12 +122,16 @@ class FormFiller extends Component {
         }
         if(res){
           var schemaData = helpers.decodeContent(res);
-          console.log(schemaData);
           self.setState({templateSchema:schemaData});
         }
       });
-      self.setState({lastTemplate: this.props.templateLoaded})
+      self.setState({lastTemplate: this.props.templateLoaded});
     }
+  }
+
+  handleChange(event){
+    this.setState({templateSchema: event.target.value});
+    this.props.formData(event.target.value);
   }
 
   render() {
@@ -137,7 +139,7 @@ class FormFiller extends Component {
       return (
         <div id="template_form_container">
             <form id="template_form">
-            <textarea value={this.state.templateSchema}></textarea>
+            <textarea value={this.state.templateSchema} onChange={this.handleChange} />
             </form>
         </div>
       );
@@ -153,6 +155,41 @@ class FormFiller extends Component {
 class RenderedTemplate extends Component {
   constructor(props) {
     super(props);
+    this.state =  {formObject: {},
+                braidedText: '',
+                lastData: false,
+                lastBraided: false};
+  }
+
+  componentWillReceiveProps() {
+    this.parseYml();
+  }
+
+  componentWillUpdate(){
+    const handledBarText = this.handlingBars();
+    if(handledBarText !== this.state.lastBraided){
+          this.setState({braidedText: handledBarText,
+                         lastBraided: handledBarText});
+    }
+  }
+
+  parseYml(){
+    if(this.props.formData !== '' & this.props.formData !== this.state.lastData){
+      const parsedYml = YAML.parse(this.props.formData);
+      this.setState({formObject: parsedYml,
+                    lastData: parsedYml});
+      // this.handlingBars();
+    }
+  }
+
+  handlingBars(){
+    if(this.props.templateText !== ''){
+      const template = Handlebars.compile(this.props.templateText);
+      const handledBar = template(this.state.formObject);
+      return handledBar;
+      // this.setState({braidedText: handledBar});
+
+    }
   }
   render() {
 
@@ -162,7 +199,7 @@ class RenderedTemplate extends Component {
       );
     } else {
       return (
-        <div id="rendered_template"><Markdown markup={ this.props.templateText } tables={true} components={{ }} /></div>
+        <div id="rendered_template"><Markdown markup={ this.state.braidedText } tables={true} components={{ }} /></div>
       );
     }
 
@@ -182,15 +219,16 @@ class App extends Component {
     super(props);
     this.state = {templateLoded: false,
                   templateText: '',
-                  availableSchemas: []};
+                  availableSchemas: [],
+                  formData: ''};
     this.handleSelectTemplate = this.handleSelectTemplate.bind(this);
+    this.handleFormEntry = this.handleFormEntry.bind(this);
   }
 
   handleSelectTemplate(templateSelected){
     this.setState({templateLoaded: templateSelected.loaded,
                    availableSchemas: templateSelected.schemas});
     if(this.state.templateLoaded){
-      console.log(this.state.availableSchemas);
       this.getTemplateData();
     }
   }
@@ -208,16 +246,20 @@ class App extends Component {
     });
   }
 
+  handleFormEntry(formData){
+    this.setState({formData: formData})
+  }
+
   render() {
     return (
       <div className="usa-grid">
           <div className="row">
               <div className="usa-width-one-half">
               <SelectTemplate onUserChange={this.handleSelectTemplate} templateLoaded={this.state.templateLoaded}/>
-              <FormFiller templateLoaded={this.state.templateLoaded} availableSchemas={this.state.availableSchemas}/>
+              <FormFiller templateLoaded={this.state.templateLoaded} availableSchemas={this.state.availableSchemas} formData={this.handleFormEntry}/>
               </div>
               <div className="usa-width-one-half">
-                  <RenderedTemplate templateText={this.state.templateText}/>
+                  <RenderedTemplate templateText={this.state.templateText} formData={this.state.formData}/>
                   <DownloadButton />
               </div>
           </div>
