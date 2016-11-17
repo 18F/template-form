@@ -65,6 +65,7 @@ class SelectTemplate extends Component {
 
   handleChangeSub(event){
     this.props.onUserChange({loaded: event.target.value, schemas: this.state.availableSchemaFiles[this.state.templateDirectorySelected]});
+    this.setState({templateSelected: event.target.value})
   }
 
   renderFileSelect(){
@@ -74,7 +75,7 @@ class SelectTemplate extends Component {
       return(
         <div>
         Please choose a template.
-        <select value={this.state.templateDirectorySelected} onChange={this.handleChangeSub}>
+        <select value={this.state.templateSelected} onChange={this.handleChangeSub}>
           {this.renderListItem(selectedTemplates, 'directory')}
         </select>
         </div>
@@ -161,35 +162,33 @@ class RenderedTemplate extends Component {
                 lastBraided: false};
   }
 
-  componentWillReceiveProps() {
-    this.parseYml();
+  componentWillReceiveProps(nextProps) {
+    this.parseYml(nextProps);
   }
 
-  componentWillUpdate(){
-    const handledBarText = this.handlingBars();
-    if(handledBarText !== this.state.lastBraided){
-          this.setState({braidedText: handledBarText,
-                         lastBraided: handledBarText});
+  parseYml(updatedProps){
+    if(updatedProps.formData !== this.props.formData){
+      const parsedYml = YAML.parse(updatedProps.formData);
+      this.setState({formObject: parsedYml});
+      this.handlingBars(updatedProps, parsedYml);
+    } else if (updatedProps.templateText !== this.props.templateText){
+        this.handlingBars(updatedProps, this.state.formObject);
     }
+
   }
 
-  parseYml(){
-    if(this.props.formData !== '' & this.props.formData !== this.state.lastData){
-      const parsedYml = YAML.parse(this.props.formData);
-      this.setState({formObject: parsedYml,
-                    lastData: parsedYml});
-      // this.handlingBars();
-    }
-  }
-
-  handlingBars(){
-    if(this.props.templateText !== ''){
-      const template = Handlebars.compile(this.props.templateText);
-      const handledBar = template(this.state.formObject);
-      return handledBar;
-      // this.setState({braidedText: handledBar});
-
-    }
+  handlingBars(updatedProps, handlesObject){
+    console.log("handlingBars");
+      console.log(updatedProps.templateText);
+      const template = Handlebars.compile(updatedProps.templateText);
+      console.log(handlesObject);
+      const handledBar = template(handlesObject);
+      // return handledBar;
+      console.log(handledBar);
+      if(handledBar !== this.state.lastBraided){
+            this.setState({braidedText: handledBar,
+                           lastBraided: handledBar});
+      }
   }
   render() {
 
@@ -228,14 +227,17 @@ class App extends Component {
   handleSelectTemplate(templateSelected){
     this.setState({templateLoaded: templateSelected.loaded,
                    availableSchemas: templateSelected.schemas});
-    if(this.state.templateLoaded){
-      this.getTemplateData();
-    }
   }
 
-  getTemplateData(){
+  componentWillUpdate(nextProps, nextState) {
+  if (nextState.templateLoaded !== this.state.templateLoaded) {
+    this.getTemplateData(nextState);
+  }
+ }
+
+  getTemplateData(updatedState){
     var self = this;
-    const url = 'https://api.github.com/repos/18F/'+templateRepo+'/contents/'+this.state.templateLoaded;
+    const url = 'https://api.github.com/repos/18F/'+templateRepo+'/contents/'+updatedState.templateLoaded;
     request
     .get(url)
     .set('Accept', 'application/json')
