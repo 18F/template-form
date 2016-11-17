@@ -100,9 +100,11 @@ class FormFiller extends Component {
   constructor(props) {
     super(props);
     this.state = {templateSchema: '',
-                  lastTemplate: false};
+                  lastTemplate: false,
+                  emptySchema: ''};
 
     this.handleChange = this.handleChange.bind(this);
+    this.clearData = this.clearData.bind(this);
   }
 
   componentDidUpdate() {
@@ -123,7 +125,8 @@ class FormFiller extends Component {
         }
         if(res){
           var schemaData = helpers.decodeContent(res);
-          self.setState({templateSchema:schemaData});
+          self.setState({templateSchema:schemaData,
+                        emptySchema: schemaData});
         }
       });
       self.setState({lastTemplate: this.props.templateLoaded});
@@ -135,13 +138,21 @@ class FormFiller extends Component {
     this.props.formData(event.target.value);
   }
 
+  clearData(){
+    this.setState({templateSchema: this.state.emptySchema});
+    this.props.formData(this.state.emptySchema);
+  }
+
+
   render() {
     if(this.props.templateLoaded){
       return (
         <div id="template_form_container">
             <form id="template_form">
-            <textarea value={this.state.templateSchema} onChange={this.handleChange} />
+            <textarea value={this.state.templateSchema} onChange={this.handleChange} className="yaml-textarea" />
             </form>
+            <DataButton text="Clear Data" fxn={this.clearData} />
+            <DataButton text="Copy Data" fxn={helpers.copyData('.yaml-textarea')} />
         </div>
       );
     } else {
@@ -153,13 +164,23 @@ class FormFiller extends Component {
   }
 }
 
+class DataButton extends Component {
+  constructor(props){
+    super(props);
+  }
+  render () {
+    return (
+      <button onClick={this.props.fxn}>{this.props.text}</button>
+    )
+  }
+}
+
 class RenderedTemplate extends Component {
   constructor(props) {
     super(props);
     this.state =  {formObject: {},
-                braidedText: '',
-                lastData: false,
-                lastBraided: false};
+                braidedText: ''};
+   this.downloadMD = this.downloadMD.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -178,38 +199,28 @@ class RenderedTemplate extends Component {
   }
 
   handlingBars(updatedProps, handlesObject){
-    console.log("handlingBars");
-      console.log(updatedProps.templateText);
       const template = Handlebars.compile(updatedProps.templateText);
-      console.log(handlesObject);
       const handledBar = template(handlesObject);
-      // return handledBar;
-      console.log(handledBar);
-      if(handledBar !== this.state.lastBraided){
-            this.setState({braidedText: handledBar,
-                           lastBraided: handledBar});
-      }
+      this.setState({braidedText: handledBar});
   }
+
+  downloadMD(){
+    window.open("data:application/txt," + encodeURIComponent(this.state.braidedText), "_self");
+  }
+
   render() {
 
     if(this.props.templateText === ''){
       return (
+
         <div id="rendered_template">Please Select a Template to View</div>
       );
     } else {
       return (
-        <div id="rendered_template"><Markdown markup={ this.state.braidedText } tables={true} components={{ }} /></div>
+        <div id="rendered_template"><DataButton text="Download Markdown" fxn={this.downloadMD }  /><DataButton text="Copy Markdown" fxn={helpers.copyData('.rendered-markdown')}  /><Markdown markup={ this.state.braidedText } tables={true} components={{ }} /><input type='hidden' name='hidden-markdown-value' className='rendered-markdown' value={this.state.braidedText} /></div>
       );
     }
 
-  }
-}
-
-class DownloadButton extends Component {
-  render() {
-    return (
-      <button>Download</button>
-    );
   }
 }
 
@@ -262,7 +273,6 @@ class App extends Component {
               </div>
               <div className="usa-width-one-half">
                   <RenderedTemplate templateText={this.state.templateText} formData={this.state.formData}/>
-                  <DownloadButton />
               </div>
           </div>
       </div>

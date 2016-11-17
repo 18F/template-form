@@ -38,3 +38,22 @@ export function decodeContent(gitResource){
  });
  return subFileHash;
  }
+
+ export function copyData(targ){
+   let inp = (targ ? document.querySelector(targ) : null);
+       // is element selectable?
+   if (inp && inp.select) {
+     console.log("found");
+     // select text
+     inp.select();
+
+     try {
+       // copy text
+       document.execCommand('copy');
+       inp.blur();
+     }
+     catch (err) {
+       alert('please press Ctrl/Cmd+C to copy');
+     }
+   }
+ }
