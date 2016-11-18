@@ -47,7 +47,7 @@ export default class Header extends Component {
     <div className="usa-navbar">
     <div className="usa-logo" id="logo">
       <em className="usa-logo-text">
-        <a href="#" accesskey="1" title="Home" aria-label="Home">AcqStack Markdown <br />Template Filler</a>
+        <a href="#" title="Home" aria-label="Home">AcqStack Markdown <br />Template Filler</a>
       </em>
     </div>
   </div>

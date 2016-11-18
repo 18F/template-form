@@ -2,8 +2,6 @@ import React, { Component } from 'react';
 import * as helpers from '../helpers';
 import * as request from 'superagent';
 
-const remoteBranch = 'sow-yaml-schema';
-
 export default class SelectTemplate extends Component {
   constructor(props) {
     super(props);

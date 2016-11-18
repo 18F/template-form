@@ -13,7 +13,7 @@ export function decodeContent(gitResource){
  export function labelMaker(templateName){
   const templateParse = templateName.split('/');
    if (templateParse.length > 1){
-     const noDirectory = templateParse.shift();
+    templateParse.shift();
     let templateTitle = templateParse.shift().split('.').slice(0, -1);
       templateTitle = templateTitle[0].split('_').map((word) => word.toSentenceCase()).join(' ');
      return templateTitle;
