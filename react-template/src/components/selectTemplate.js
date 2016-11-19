@@ -20,7 +20,7 @@ export default class SelectTemplate extends Component {
   }
 
   getGitFiles(){
-    const url = 'https://api.github.com/repos/18F/'+this.props.repoForTemplates+'/git/trees/'+this.props.branchForTemplates+'?recursive=1';
+    const url = 'https://api.github.com/repos/18F/'+this.props.templateRepo+'/git/trees/'+this.props.remoteBranch+'?recursive=1';
     const self = this;
     request
     .get(url)
@@ -86,4 +86,14 @@ export default class SelectTemplate extends Component {
       </div>
     );
   }
+}
+
+SelectTemplate.propTypes = {
+  onUserChange: React.PropTypes.func.isRequired,
+  templateLoaded: React.PropTypes.oneOfType([
+    React.PropTypes.string,
+    React.PropTypes.bool
+  ]),
+  templateRepo: React.PropTypes.string.isRequired,
+  remoteBranch: React.PropTypes.string.isRequired
 }

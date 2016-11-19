@@ -24,7 +24,6 @@ export default class RenderedTemplate extends Component {
     } else if (updatedProps.templateText !== this.props.templateText){
         this.handlingBars(updatedProps, this.state.formObject);
     }
-
   }
 
   handlingBars(updatedProps, handlesObject){
@@ -58,4 +57,9 @@ export default class RenderedTemplate extends Component {
     }
 
   }
+}
+
+RenderedTemplate.propTypes = {
+  templateText: React.PropTypes.string.isRequired,
+  formData: React.PropTypes.string.isRequired
 }

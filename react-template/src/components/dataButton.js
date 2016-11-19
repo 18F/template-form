@@ -7,3 +7,8 @@ export default class DataButton extends Component {
     )
   }
 }
+
+DataButton.propTypes = {
+  text: React.PropTypes.string.isRequired,
+  fxn: React.PropTypes.func.isRequired
+}

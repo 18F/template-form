@@ -52,27 +52,26 @@ class App extends Component {
       <Header />
       <div className="usa-overlay"></div>
       <main id="main-content">
-      <div className="usa-grid">
-          <div className="row">
-              <div className="usa-width-one-half">
-                <SelectTemplate onUserChange={this.handleSelectTemplate}
-                                templateLoaded={this.state.templateLoaded}
-                                repoForTemplates={this.state.templateRepo}
-                                branchForTemplates={this.state.remoteBranch}
-                />
+      <div className="usa-grid-full">
+            <div className="usa-width-one-half">
+              <SelectTemplate onUserChange={this.handleSelectTemplate}
+                              templateLoaded={this.state.templateLoaded}
+                              templateRepo={this.state.templateRepo}
+                              remoteBranch={this.state.remoteBranch}
+              />
 
-                <FormFiller templateLoaded={this.state.templateLoaded}
-                            availableSchemas={this.state.availableSchemas}
-                            formData={this.handleFormEntry} templateRepo={this.state.templateRepo}
-                            remoteBranch={this.state.remoteBranch}
-                />
-              </div>
-              <div className="usa-width-one-half">
-                <RenderedTemplate templateText={this.state.templateText}
-                                  formData={this.state.formData}
-                />
-              </div>
-          </div>
+              <FormFiller templateLoaded={this.state.templateLoaded}
+                          availableSchemas={this.state.availableSchemas}
+                          formData={this.handleFormEntry}
+                          templateRepo={this.state.templateRepo}
+                          remoteBranch={this.state.remoteBranch}
+              />
+            </div>
+            <div className="usa-width-one-half">
+              <RenderedTemplate templateText={this.state.templateText}
+                                formData={this.state.formData}
+              />
+            </div>
       </div>
       </main>
       </div>
