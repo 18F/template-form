@@ -20,14 +20,14 @@ export default class RenderedTemplate extends Component {
     if(updatedProps.formData !== this.props.formData){
       const parsedYml = YAML.parse(updatedProps.formData);
       this.setState({formObject: parsedYml});
-      this.handlingBars(updatedProps, parsedYml);
+      this.handlingBars(updatedProps.templateText, parsedYml);
     } else if (updatedProps.templateText !== this.props.templateText){
-        this.handlingBars(updatedProps, this.state.formObject);
+        this.handlingBars(updatedProps.templateText, this.state.formObject);
     }
   }
 
-  handlingBars(updatedProps, handlesObject){
-      const template = Handlebars.compile(updatedProps.templateText);
+  handlingBars(templateText, handlesObject){
+      const template = Handlebars.compile(templateText);
       const handledBar = template(handlesObject);
       this.setState({braidedText: handledBar});
   }
@@ -46,12 +46,14 @@ export default class RenderedTemplate extends Component {
     } else {
       return (
         <div id="rendered_template">
-        <DataButton text="Download Markdown" fxn={this.downloadMD }  />
-        <Markdown markup={ this.state.braidedText } tables={true} components={{ }} />
-        <hr />
-        <br />
-        <h3> Copy the Markdown Below</h3>
-        <textarea name='hidden-markdown-value' className='rendered-markdown' value={this.state.braidedText} />
+          <DataButton text="Download Markdown" fxn={this.downloadMD }  />
+          <div className="marked-up-result">
+            <Markdown markup={ this.state.braidedText } tables={true} components={{ }} />
+          </div>
+          <hr />
+          <br />
+          <h3> Copy the Markdown Below</h3>
+          <textarea name='hidden-markdown-value' className='rendered-markdown' value={this.state.braidedText} />
         </div>
       );
     }
