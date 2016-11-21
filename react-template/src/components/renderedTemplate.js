@@ -46,7 +46,7 @@ export default class RenderedTemplate extends Component {
     } else {
       return (
         <div id="rendered_template">
-          <DataButton text="Download Markdown" fxn={this.downloadMD }  />
+          <DataButton text="Download Markdown" fxn={this.downloadMD } className="download-button" />
           <div className="marked-up-result">
             <Markdown markup={ this.state.braidedText } tables={true} components={{ }} />
           </div>

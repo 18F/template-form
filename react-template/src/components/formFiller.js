@@ -21,7 +21,6 @@ export default class FormFiller extends Component {
 
   getSchema(){
     var self = this;
-    console.log(this.props.availableSchemas);
     if(this.props.templateLoaded && this.props.templateLoaded !== this.state.lastTemplate){
       const url = 'https://api.github.com/repos/18F/'+this.props.templateRepo+'/contents/'+ this.props.availableSchemas[0].path;
       request

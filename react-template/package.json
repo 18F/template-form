@@ -16,6 +16,7 @@
     "react-showdown": "^1.0.1",
     "showdown": "^1.5.0",
     "superagent": "^2.3.0",
+    "superagent-mocker": "^0.5.2",
     "uswds": "^0.13.1",
     "yaml2json": "^1.0.2",
     "yamljs": "^0.2.8"

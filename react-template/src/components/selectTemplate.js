@@ -30,15 +30,20 @@ export default class SelectTemplate extends Component {
         console.log(err.toString());
       }
       if(res){
-        const parsedData = JSON.parse(res.text);
-        const directories = parsedData.tree.filter(gitPath => gitPath.type === 'tree');
-        const templateFileHash = helpers.createFileHash(parsedData.tree, 'md');
-        const schemaFileHash = helpers.createFileHash(parsedData.tree, 'yml');
-        self.setState({availableTemplateDirectories: directories,
-                      availableTemplateFiles: templateFileHash,
-                      availableSchemaFiles: schemaFileHash});
+        // console.log(res);
+        self.parseRes(res);
       }
     });
+  }
+
+  parseRes(result){
+    const parsedData = JSON.parse(result.text);
+    const directories = parsedData.tree.filter(gitPath => gitPath.type === 'tree');
+    const templateFileHash = helpers.createFileHash(parsedData.tree, 'md');
+    const schemaFileHash = helpers.createFileHash(parsedData.tree, 'yml');
+    this.setState({availableTemplateDirectories: directories,
+                  availableTemplateFiles: templateFileHash,
+                  availableSchemaFiles: schemaFileHash});
   }
 
   renderListItem(items, initKey){
