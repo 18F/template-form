@@ -6,7 +6,8 @@
     "enzyme": "^2.6.0",
     "react-addons-test-utils": "^15.4.0",
     "react-dom": "^15.4.0",
-    "react-scripts": "0.7.0"
+    "react-scripts": "0.7.0",
+    "superagent-mocker": "^0.5.2"
   },
   "dependencies": {
     "handlebars": "^4.0.5",

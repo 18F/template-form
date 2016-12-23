@@ -30,7 +30,6 @@ export default class SelectTemplate extends Component {
         console.log(err.toString());
       }
       if(res){
-        // console.log(res);
         self.parseRes(res);
       }
     });
