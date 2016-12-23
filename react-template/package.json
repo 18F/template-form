@@ -1,0 +1,30 @@
+{
+  "name": "react-template",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "enzyme": "^2.6.0",
+    "react-addons-test-utils": "^15.4.0",
+    "react-dom": "^15.4.0",
+    "react-scripts": "0.7.0"
+  },
+  "dependencies": {
+    "handlebars": "^4.0.5",
+    "js-base64": "^2.1.9",
+    "react": "^15.3.2",
+    "react-dom": "^15.3.2",
+    "react-showdown": "^1.0.1",
+    "showdown": "^1.5.0",
+    "superagent": "^2.3.0",
+    "superagent-mocker": "^0.5.2",
+    "uswds": "^0.13.1",
+    "yaml2json": "^1.0.2",
+    "yamljs": "^0.2.8"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}

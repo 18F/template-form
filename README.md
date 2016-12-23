@@ -1,15 +1,12 @@
-# template-form
+# Template Form
+
+A react app to pull from github a markdown template with handlebars expressions.
 
 ## Install
-If you do not aleady have grunt installed
 ```
-npm install grunt -g
-```
-
-```
-git clone https://github.com/18F/template-form
+cd react-template
 npm install
-grunt
+npm start
 ```
 
 ## Contributing
