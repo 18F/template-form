@@ -1,3 +1,4 @@
+import request from 'superagent';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { shallow, mount } from 'enzyme';
@@ -65,14 +66,20 @@ describe('RenderedTemplate Component', () => {
     expect(templateBloc.state('braidedText')).toEqual('# h1 test test')
   });
 
-  it('opens up a new window event', () => {
+  it.skip('opens up a new window event', () => {
     //need to mock window open and check encodeURIComponent called with '# h1 test test'
-    const windowOpenMock = jest.fn(window.open);
-    const templateBloc = shallow(<RenderedTemplate templateText={''} formData={''}/>);
-    templateBloc.instance().handlingBars('# h1 test {{ testbracket }}', {testbracket: 'test'})
-    templateBloc.find('.download-button').simulate('click');
-    const downloadText = 'data:application/txt,%23+h1+test+test'
-    expect(windowOpenMock).toHaveBeenLastCalledWith(downloadText, "_self");
+    const window = {};
+    const openMock = jest.fn();
+    window.mockImplementation(() => {
+      return {
+        open: openMock
+      }
+    })
+    const templateBloc = mount(<RenderedTemplate templateText={''} formData={{testbracket: 't'}}/>);
+    templateBloc.setState({braidedText: '# h1 test test'});
+    templateBloc.find('button').simulate('click');
+    const downloadText = 'data:application/txt,%23+h1+test+test';
+    expect(window.open).toHaveBeenLastCalledWith(downloadText, "_self");
   });
 });
 
@@ -81,7 +88,9 @@ describe('SelectTemplate Component', () => {
   // jest.resetModules();
 });
 
-  it.skip('renders SelectTemplate without crashing', () => {
+  it('renders SelectTemplate without crashing', () => {
+    let repoResp = {text: '{ "tree": [ { "path": ".about.yml"} ]} '};
+    request.__setMockResponse(repoResp);
     const div = document.createElement('div');
     function handleSelectTemplate(templateSelected){
       return true;
@@ -94,39 +103,42 @@ describe('SelectTemplate Component', () => {
   });
 
   it('gets a gittree from github', () => {
+    let repoResp = {text: '{ "tree": [ { "path": ".about.yml"} ]} '};
+    request.__setMockResponse(repoResp);
     function handleSelectTemplate(templateSelected){
       return true;
     }
-    request.get('https://api.github.com/repos/18F/acq-templates/git/trees/develop?recursive=1', function(req){return{
-      text: '{tree: "hi"}'
-    };})
-    let selectBloc = shallow(<SelectTemplate onUserChange={handleSelectTemplate}
+    let selectBloc = mount(<SelectTemplate onUserChange={handleSelectTemplate}
                     templateLoaded={false}
                     templateRepo={'acq-templates'}
                     remoteBranch={'develop'} />);
 
-    expect(request.mock.calls.length).toBe(1);
+    let url = 'https://api.github.com/repos/18F/acq-templates/git/trees/develop?recursive=1'
+    expect(request.end).toBeCalled();
   });
 
-  it.skip('expects the parsed yml to set the state of availableSchemas, the directoires, and the available templates', () => {
+  it('expects the parsed yml to set the state of availableSchemas, the directoires, and the available templates', () => {
+    let repoResp = {text: '{"tree": [{"path": "sow", "type": "tree"}, {"path": "sow/schema.yml", "type": "blob"}, {"path": "sow/agile-test.md", "type": "blob"}, {"path": "sow/agile-beta.md", "type": "blob"}]}'};
+    request.__setMockResponse(repoResp);
     function handleSelectTemplate(templateSelected){
       return true;
     }
-    let selectBloc = shallow(<SelectTemplate onUserChange={handleSelectTemplate}
+    let selectBloc = mount(<SelectTemplate onUserChange={handleSelectTemplate}
                     templateLoaded={false}
                     templateRepo={'acq-templates'}
                     remoteBranch={'develop'} />);
-    const sampleRes = '' // need to wait until rate limit clears;
-    expect(selectBloc.state('availableSchemaFiles')).toEqual('schema.yml');
-    expect(selectBloc.state('availableTemplateFiles')).toEqual({'sow':['agile-test', 'agile-beta']});// will need to udate
-    expect(selectBloc.state('availableTemplateDirectories')).toEqual(['sow']);
+    expect(selectBloc.state('availableSchemaFiles')).toEqual({"sow": [{"filename": "schema.yml", "path": "sow/schema.yml", "type": "blob"}]});
+    expect(selectBloc.state('availableTemplateFiles')).toEqual({'sow':[{"filename": "agile-test.md", "path": "sow/agile-test.md", "type": "blob"}, {"filename": "agile-beta.md", "path": "sow/agile-beta.md", "type": "blob"}]});// will need to udate
+    expect(selectBloc.state('availableTemplateDirectories')).toEqual([{"path": "sow", "type": "tree"}]);
   });
 
-  it.skip('expects that renderListItem(items, initKey) a list of options', () => {
+  it('expects that renderListItem(items, initKey) a list of options', () => {
+    const repoResp = {text: '{ "tree": [ { "path": ".about.yml"} ]} '};
+    request.__setMockResponse(repoResp);
     function handleSelectTemplate(templateSelected){
       return true;
     }
-    let selectBloc = shallow(<SelectTemplate onUserChange={handleSelectTemplate}
+    let selectBloc = mount(<SelectTemplate onUserChange={handleSelectTemplate}
                     templateLoaded={false}
                     templateRepo={'acq-templates'}
                     remoteBranch={'develop'} />);
@@ -140,10 +152,11 @@ describe('SelectTemplate Component', () => {
 
   it.skip('renderFileSelect() builds a list', () => {
     // request will need to be mocked
+    let repoResp = {text: '{"tree": [  {"path": "sow", "type": "tree"}, { "path": "sow/agile-test.md", "type": "blob"}, { "path": "sow/agile-beta.md", "type": "blob"}, { "path": "sow/schema.yml", "type": "blob"}], "truncated": false }'};
+    request.__setMockResponse(repoResp);
     function handleSelectTemplate(templateSelected){
       return true;
     }
-    const reqMock = jest.fn(request);
     let selectBloc = shallow(<SelectTemplate onUserChange={handleSelectTemplate}
                     templateLoaded={false}
                     templateRepo={'acq-templates'}

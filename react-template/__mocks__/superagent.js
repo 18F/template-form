@@ -1,55 +1,68 @@
-let request = jest.genMockFromModule('superagent');
-const mock = require('superagent-mocker')(request);
-request = mock
-// request.get = mock.get;
-// request.post = mock.post;
-// request.del = mock.del;
-// request.patch = mock.patch;
+'use strict';
 
-module.exports = request;
+//mock for superagent - __mocks__/superagent.js
+//source: https://gist.github.com/pherris/aa74aa9b8b1a55ea053b
 
-// function get (url) {
-//   return new Promise((resolve, reject) => {
-//     const userID = parseInt(url.substr('/users/'.length), 10);
-//     process.nextTick(
-//       () => {console.log("hi")
-//         users[userID] ? resolve(users[userID]) : reject({
-//         error: 'User with ' + userID + ' not found.',
-//       })}
-//     );
-//   });
-// }
-//
-// function set(object){
-//   return true;
-// }
-//
-// function end(){
-//   console.log("end");
-// }
+var mockDelay;
+var mockError = {};
+var mockResponse = {
+  status() {
+    return 200;
+  },
+  ok() {
+    return true;
+  },
+  get: jest.genMockFunction(),
+  toError: jest.genMockFunction()
+};
 
-// This is a custom function that our tests can use during setup to specify
-// what the files on the "mock" filesystem should look like when any of the
-// `fs` APIs are used.
-// let mockFiles = Object.create(null);
-// function __setMockFiles(newMockFiles) {
-//   mockFiles = Object.create(null);
-//   for (const file in newMockFiles) {
-//     const dir = path.dirname(file);
-//
-//     if (!mockFiles[dir]) {
-//       mockFiles[dir] = [];
-//     }
-//     mockFiles[dir].push(path.basename(file));
-//   }
-// }
+var Request = {
+  post() {
+    return this;
+  },
+  get() {
+    return this;
+  },
+  send() {
+    return this;
+  },
+  query() {
+    return this;
+  },
+  field() {
+    return this;
+  },
+  attach() {
+    return this;
+  },
+  set() {
+    return this;
+  },
+  accept() {
+    return this;
+  },
+  timeout() {
+    return this;
+  },
+  end: jest.genMockFunction().mockImplementation(function(callback) {
+    if (mockDelay) {
+      this.delayTimer = setTimeout(callback, 0, mockError, mockResponse);
 
-// A custom version of `readdirSync` that reads from the special mocked out
-// file list set via __setMockFiles
-// function readdirSync(directoryPath) {
-//   return mockFiles[directoryPath] || [];
-// }
-//
-// request.get = get;
-// request.set = set;
-// request.end = end;
+      return;
+    }
+
+    callback(mockError, mockResponse);
+  }),
+  //expose helper methods for tests to set
+  __setMockDelay(boolValue) {
+    mockDelay = boolValue;
+  },
+  __setMockResponse(mockRes) {
+    mockResponse = mockRes;
+  },
+  __setMockError(mockErr) {
+    mockError = mockErr;
+  }
+};
+
+module.exports = Request;
