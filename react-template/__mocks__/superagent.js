@@ -4,7 +4,7 @@
 //source: https://gist.github.com/pherris/aa74aa9b8b1a55ea053b
 
 var mockDelay;
-var mockError = {};
+var mockError;
 var mockResponse = {
   status() {
     return 200;

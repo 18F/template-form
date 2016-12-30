@@ -57,7 +57,6 @@ export default class FormFiller extends Component {
     if (inp && inp.select) {
       // select text
       inp.select();
-
       try {
         // copy text
         document.execCommand('copy');

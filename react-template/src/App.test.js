@@ -5,7 +5,9 @@ import { shallow, mount } from 'enzyme';
 import App from './App';
 import { DataButton, FormFiller, Header, RenderedTemplate, SelectTemplate } from './components';
 
-it.skip('renders app without crashing', () => {
+it('renders app without crashing', () => {
+  let repoResp = {text: '{"tree": [{"path": "sow", "type": "tree"}, {"path": "sow/schema.yml", "type": "blob"}, {"path": "sow/agile-test.md", "type": "blob"}, {"path": "sow/agile-beta.md", "type": "blob"}]}'};
+  request.__setMockResponse(repoResp);
   const div = document.createElement('div');
   ReactDOM.render(<App />, div);
 });
@@ -66,15 +68,14 @@ describe('RenderedTemplate Component', () => {
     expect(templateBloc.state('braidedText')).toEqual('# h1 test test')
   });
 
-  it.skip('opens up a new window event', () => {
+  it('opens up a new window event', () => {
     //need to mock window open and check encodeURIComponent called with '# h1 test test'
-    const window = {};
-    const openMock = jest.fn();
-    window.mockImplementation(() => {
-      return {
-        open: openMock
-      }
-    })
+    const window = jest.fn(() => {
+      var windowMock = {
+        open: jest.fn()
+      };
+      return windowMock;
+    });
     const templateBloc = mount(<RenderedTemplate templateText={''} formData={{testbracket: 't'}}/>);
     templateBloc.setState({braidedText: '# h1 test test'});
     templateBloc.find('button').simulate('click');
@@ -85,12 +86,10 @@ describe('RenderedTemplate Component', () => {
 
 describe('SelectTemplate Component', () => {
   beforeEach(() => {
-  // jest.resetModules();
-});
-
-  it('renders SelectTemplate without crashing', () => {
-    let repoResp = {text: '{ "tree": [ { "path": ".about.yml"} ]} '};
+    let repoResp = {text: '{"tree": [{"path": "sow", "type": "tree"}, {"path": "sow/schema.yml", "type": "blob"}, {"path": "sow/agile-test.md", "type": "blob"}, {"path": "sow/agile-beta.md", "type": "blob"}]}'};
     request.__setMockResponse(repoResp);
+  });
+  it('renders SelectTemplate without crashing', () => {
     const div = document.createElement('div');
     function handleSelectTemplate(templateSelected){
       return true;
@@ -103,8 +102,6 @@ describe('SelectTemplate Component', () => {
   });
 
   it('gets a gittree from github', () => {
-    let repoResp = {text: '{ "tree": [ { "path": ".about.yml"} ]} '};
-    request.__setMockResponse(repoResp);
     function handleSelectTemplate(templateSelected){
       return true;
     }
@@ -118,8 +115,7 @@ describe('SelectTemplate Component', () => {
   });
 
   it('expects the parsed yml to set the state of availableSchemas, the directoires, and the available templates', () => {
-    let repoResp = {text: '{"tree": [{"path": "sow", "type": "tree"}, {"path": "sow/schema.yml", "type": "blob"}, {"path": "sow/agile-test.md", "type": "blob"}, {"path": "sow/agile-beta.md", "type": "blob"}]}'};
-    request.__setMockResponse(repoResp);
+
     function handleSelectTemplate(templateSelected){
       return true;
     }
@@ -133,8 +129,6 @@ describe('SelectTemplate Component', () => {
   });
 
   it('expects that renderListItem(items, initKey) a list of options', () => {
-    const repoResp = {text: '{ "tree": [ { "path": ".about.yml"} ]} '};
-    request.__setMockResponse(repoResp);
     function handleSelectTemplate(templateSelected){
       return true;
     }
@@ -142,35 +136,34 @@ describe('SelectTemplate Component', () => {
                     templateLoaded={false}
                     templateRepo={'acq-templates'}
                     remoteBranch={'develop'} />);
-    selectBloc.instance().renderListItem([{path:'this_is_cool.md'},{path:'this_is_not.md'}], 'boo');
-    expect(selectBloc.find('select').containsAllMatchingElements([
-      <option value="boo">Select a template type</option>,
-      <option value="this_is_cool">This Is Cool</option>,
-      <option value="this_is_not">This Is Not</option>
-    ])).toBeTruthy();
+    const testSelect = selectBloc.instance().renderListItem([{path:'this_is_cool.md'},{path:'this_is_not.md'}], 'boo')
+    console.log(testSelect);
+    expect(testSelect).toEqual(mount(<option value={false}>Select a template type</option>,
+          <option value="this_is_cool">This Is Cool</option>,
+          <option value="this_is_not">This Is Not</option>).nodes);
+    // expect(selectBloc.find('select').containsMatchingElement(
+    //   <option key="boo" value="false">Select a template type</option>
+    // )).toBeTruthy();
   });
 
-  it.skip('renderFileSelect() builds a list', () => {
-    // request will need to be mocked
-    let repoResp = {text: '{"tree": [  {"path": "sow", "type": "tree"}, { "path": "sow/agile-test.md", "type": "blob"}, { "path": "sow/agile-beta.md", "type": "blob"}, { "path": "sow/schema.yml", "type": "blob"}], "truncated": false }'};
-    request.__setMockResponse(repoResp);
+  it('renderFileSelect() builds a list', () => {
     function handleSelectTemplate(templateSelected){
       return true;
     }
-    let selectBloc = shallow(<SelectTemplate onUserChange={handleSelectTemplate}
+    let selectBloc = mount(<SelectTemplate onUserChange={handleSelectTemplate}
                     templateLoaded={false}
                     templateRepo={'acq-templates'}
                     remoteBranch={'develop'} />);
-    selectBloc.instance().renderFileSelect()
+    selectBloc.setState({templateDirectorySelected: 'sow'})
+    selectBloc.instance().renderFileSelect();
   });
 
   it.skip('handles the change of the directory select and sets the directory state', () => {
-    // request will need to be mocked
     function handleSelectTemplate(templateSelected){
       return true;
     }
     const reqMock = jest.fn(request);
-    let selectBloc = shallow(<SelectTemplate onUserChange={handleSelectTemplate}
+    let selectBloc = mount(<SelectTemplate onUserChange={handleSelectTemplate}
                     templateLoaded={false}
                     templateRepo={'acq-templates'}
                     remoteBranch={'develop'} />);
@@ -178,33 +171,29 @@ describe('SelectTemplate Component', () => {
     expect(selectBloc.state('templateDirectorySelected')).toEqual('foo');
   });
 
-  it.skip('expects that the props on user change will be called and template selected will be loade', () => {
-    // request will need to be mocked
-    function handleSelectTemplate(templateSelected){
-      return true;
-    }
-    const reqMock = jest.fn(request);
-    let selectBloc = shallow(<SelectTemplate onUserChange={handleSelectTemplate}
+  it('expects that the props on user change will be called and template selected will be loade', () => {
+    const handleSelectTemplate = jest.fn();
+    let selectBloc = mount(<SelectTemplate onUserChange={handleSelectTemplate}
                     templateLoaded={false}
                     templateRepo={'acq-templates'}
                     remoteBranch={'develop'} />);
-    selectBloc.setState(availableSchemaFiles: {foo: ['hi', 'cool'], sow: ['no', 'bye']});
-    const onChangeMock = jest.fn(selectBloc.props('onUserChange'));
-    selectBloc.instance().handleChange({target: {value: 'foo'}});
-    expect(onChangeMock).toHaveBeenLastCalledWith({loaded: 'foo', schemas: ['hi', 'cool']});
-    expect(selectBloc.state('templateSelected')).toEqual('foo');
+    selectBloc.setState({templateDirectorySelected:'sow'});
+    selectBloc.instance().handleChangeSub({target: {value: 'sow/agile-test.md'}});
+    expect(handleSelectTemplate).toHaveBeenLastCalledWith({loaded: 'sow/agile-test.md', schemas: [{"filename": "schema.yml", "path": "sow/schema.yml", "type": "blob"}]});
+    expect(selectBloc.state('templateSelected')).toEqual('sow/agile-test.md');
   });
 });
 
 
 describe('FormFiller Components', () => {
-  it.skip('renderFileSelect() builds a list', () => {
-    // request will need to be mocked
+  beforeEach(() => {
+    let repoResp = {text: '{"content": "eWFtbDogaGk="}'};
+    request.__setMockResponse(repoResp);
+    const handleSelectTemplate = jest.fn();
+  });
+  it('renderFileSelect() builds a list', () => {
+    const handleSelectTemplate = jest.fn();
     const div = document.createElement('div');
-    function handleSelectTemplate(templateSelected){
-      return true;
-    }
-
     const reqMock = jest.fn(request);  // replace with superagent
     ReactDOM.render(<FormFiller templateLoaded={false}
                                 availableSchemas={[]}
@@ -213,66 +202,69 @@ describe('FormFiller Components', () => {
                                 remoteBranch={'develop'}  />, div);
   });
 
-  it.skip('gets schema from git hub and set the templateSchema', () => {
-    function handleSelectTemplate(templateSelected){
-      return true;
-    }
-    const reqMock = jest.fn(request).mockImplementation(() => {text: {content: 'eWFtbDogXCdcJw=='}});
-    const formFilling = shallow(<FormFiller templateLoaded={false}
+  it('gets schema from git hub and set the templateSchema', () => {
+    const handleSelectTemplate = jest.fn();
+    const formFilling = mount(<FormFiller templateLoaded={true}
                                 availableSchemas={[]}
                                 formData={handleSelectTemplate}
                                 templateRepo={'template-form'}
                                 remoteBranch={'develop'}  />);
-    formFilling.setProps(availableSchemas:['schema.yml']);
-    expect(formFilling.state('templateSchema')).toEqual('yaml: \'\'');
+    formFilling.setProps({availableSchemas:[{'path':'sow/schema.yml'}], templateLoaded: true});
+    expect(request.end).toBeCalled();
+    expect(formFilling.state('templateSchema')).toEqual('yaml: hi');
+    expect(formFilling.state('emptySchema')).toEqual('yaml: hi');
   });
 
-  it.skip('setstate when handling change', () => {
-    function handleSelectTemplate(templateSelected){
-      return true;
-    }
-    const reqMock = jest.fn(request).mockImplementation(() => {text: {content: 'eWFtbDogXCdcJw=='}});
-    const formFilling = shallow(<FormFiller templateLoaded={false}
+  it('setstate when handling change', () => {
+    const handleSelectTemplate = jest.fn();
+    const formFilling = mount(<FormFiller templateLoaded={false}
                                 availableSchemas={[]}
                                 formData={handleSelectTemplate}
                                 templateRepo={'template-form'}
                                 remoteBranch={'develop'}  />);
-    formFilling.setProps(availableSchemas:['schema.yml']);
+    formFilling.setProps({availableSchemas:[{'path':'sow/schema.yml'}], templateLoaded: true});
     formFilling.instance().handleChange({target: {value: 'foo'}});
     expect(formFilling.state('templateSchema')).toEqual('foo');
-    expect(formFilling.props('formData')).toHaveBeenLastCalledWith('foo');
+    expect(handleSelectTemplate).toHaveBeenLastCalledWith('foo');
   });
 
-  it.skip('expects to cleardata of the text area', () => {
-    function handleSelectTemplate(templateSelected){
-      return true;
-    }
-    const reqMock = jest.fn(request).mockImplementation(() => {text: {content: 'eWFtbDogXCdcJw=='}});
+  it('expects to cleardata of the text area', () => {
+    const handleSelectTemplate = jest.fn();
     const formFilling = shallow(<FormFiller templateLoaded={false}
                                 availableSchemas={[]}
                                 formData={handleSelectTemplate}
                                 templateRepo={'template-form'}
                                 remoteBranch={'develop'}  />);
-    formFilling.setProps(availableSchemas:['schema.yml']);
-    formFilling.instance().cleardata();
-    expect(formFilling.state('templateSchema')).toEqual('yaml: \'\'');
-    expect(formFilling.props('formData')).toHaveBeenLastCalledWith('yaml: \'\'');
+    formFilling.setProps({availableSchemas:[{'path':'sow/schema.yml'}], templateLoaded: true});
+    formFilling.setState({templateSchema: "wow"});
+    formFilling.instance().clearData();
+    expect(formFilling.state('templateSchema')).toEqual('yaml: hi');
+    expect(handleSelectTemplate).toHaveBeenLastCalledWith('yaml: hi');
   });
 
-  it.skip('expects copydata to call exect command with the text from a query selector with the given class', () => {
-    function handleSelectTemplate(templateSelected){
-      return true;
-    }
-    const reqMock = jest.fn(request).mockImplementation(() => {text: {content: 'eWFtbDogXCdcJw=='}});
-    const copyMock = jest.fn(document.execCommand('copy'));
+  it('expects copydata to call exect command with the text from a query selector with the given class', () => {
+    const handleSelectTemplate = jest.fn();
+    let document = jest.fn();
+    document.querySelector = jest.fn(() => {
+      var mockedInp = {
+        select: function(){
+          return true;
+        },
+        blur: function(){
+          return true;
+        }
+      }
+      return mockedInp;
+    });
+    document.execCommand = jest.fn();
     const formFilling = shallow(<FormFiller templateLoaded={false}
                                 availableSchemas={[]}
                                 formData={handleSelectTemplate}
                                 templateRepo={'template-form'}
                                 remoteBranch={'develop'}  />);
-    formFilling.setProps(availableSchemas:['schema.yml']);
+    formFilling.setProps({availableSchemas:[{'path':'sow/schema.yml'}], templateLoaded: true});
     formFilling.instance().copyData();
-    expect(copyMock).toHaveBeenCalled();
+    expect(document.execCommand).toHaveBeenCalled();
   });
 
 });
