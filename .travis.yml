@@ -8,4 +8,4 @@ cache:
 script:
   - cd react-template
   - npm install
-  - npm test
+  - npm test -- --coverage
