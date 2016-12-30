@@ -1,0 +1,8 @@
+---
+applications:
+- name: template-form-generator
+  memory: 64M
+  buildpack: https://github.com/cloudfoundry/staticfile-buildpack.git
+  path: "react-template/build"
+  env:
+    FORCE_HTTPS: true

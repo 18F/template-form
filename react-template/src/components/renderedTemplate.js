@@ -47,6 +47,7 @@ export default class RenderedTemplate extends Component {
       return (
         <div id="rendered_template">
           <DataButton text="Download Markdown" fxn={this.downloadMD } className="download-button" />
+          <div className="markdown-hint">Below the template is a textbox of markdown you can copy.</div>
           <div className="marked-up-result">
             <Markdown markup={ this.state.braidedText } tables={true} components={{ }} />
           </div>
