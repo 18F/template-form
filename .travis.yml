@@ -7,4 +7,5 @@ cache:
     - node_modules
 script:
   - cd react-template
-  - npm test
+  - npm install
+  - npm test -- --coverage
