@@ -1,6 +1,7 @@
 # Template Form
+[![Build Status](https://travis-ci.org/18F/template-form.svg?branch=master)](https://travis-ci.org/18F/template-form)
 
-A react app to pull from github a markdown template with handlebars expressions.
+A React app to pull from github a markdown template with handlebars expressions. For more documentation, please see the [README in the React-Template Directory](/react-template).
 
 ## Install
 ```
